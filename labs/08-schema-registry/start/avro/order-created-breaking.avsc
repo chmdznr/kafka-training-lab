@@ -1,0 +1,25 @@
+{
+  "type": "record",
+  "name": "OrderCreated",
+  "namespace": "training.shop.order",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "eventType", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "occurredAt", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    {
+      "name": "data",
+      "type": {
+        "type": "record",
+        "name": "OrderData",
+        "fields": [
+          { "name": "orderId", "type": "string" },
+          { "name": "customerId", "type": "string" },
+          { "name": "item", "type": "string" },
+          { "name": "amount", "type": "string" }
+        ]
+      }
+    }
+  ]
+}

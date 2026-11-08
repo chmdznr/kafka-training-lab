@@ -1,0 +1,31 @@
+{
+  "name": "lab06-idempotency-retry-dlt-solution",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "create-topics": "node scripts/create-topics.js",
+    "start:order": "node dist/order-service/main.js",
+    "start:payment": "node dist/payment-service/main.js",
+    "start:retry": "node dist/payment-service/retry-main.js",
+    "send:duplicate": "node scripts/send-duplicate.js",
+    "send:poison": "node scripts/send-poison.js",
+    "replay": "node scripts/replay-dlt.js"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.4.0",
+    "@nestjs/core": "12.4.0",
+    "@nestjs/microservices": "12.4.0",
+    "@nestjs/platform-express": "12.4.0",
+    "kafkajs": "2.2.4",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "typescript": "5.9.3"
+  }
+}

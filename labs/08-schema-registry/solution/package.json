@@ -1,0 +1,13 @@
+{
+  "name": "lab-08-schema-registry",
+  "private": true,
+  "description": "Lab 08 - Schema Registry dan evolusi skema Avro",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "register": "node scripts/register.js",
+    "produce": "node scripts/produce.js",
+    "consume": "node scripts/consume.js"
+  }
+}

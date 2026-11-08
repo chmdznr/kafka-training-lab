@@ -102,6 +102,19 @@ if [ "$DOCKER_OK" = 1 ]; then
     tail -n 5 /tmp/verify-env-pull.log
   fi
 
+  # The mini-project integration test (Testcontainers) needs these images on
+  # training day; pull them now while the network can still be fixed.
+  TEST_IMAGES="confluentinc/cp-kafka:8.4.0 testcontainers/ryuk:0.14.0"
+  test_pull_ok=1
+  for image in $TEST_IMAGES; do
+    docker pull "$image" >>/tmp/verify-env-pull.log 2>&1 || test_pull_ok=0
+  done
+  if [ "$test_pull_ok" = 1 ]; then
+    pass "image Testcontainers tersedia (cp-kafka, ryuk)"
+  else
+    fail "pull image Testcontainers gagal (lihat /tmp/verify-env-pull.log)"
+  fi
+
   if docker compose up -d >/tmp/verify-env-up.log 2>&1; then
     pass "docker compose up -d"
   else

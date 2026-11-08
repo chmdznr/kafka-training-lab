@@ -1,0 +1,17 @@
+{
+  "name": "lab-07-outbox-transaksi",
+  "private": true,
+  "description": "Lab 07 - outbox dan transaksi Kafka",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "order-service": "node src/order-service.js",
+    "publisher": "node src/publisher.js",
+    "payment-tx": "node src/payment-tx.js",
+    "abort-demo": "node scripts/abort-demo.js",
+    "check": "node scripts/check.js",
+    "reset": "node scripts/reset.js"
+  }
+}

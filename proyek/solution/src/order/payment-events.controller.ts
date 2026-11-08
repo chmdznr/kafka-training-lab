@@ -1,0 +1,78 @@
+import { Controller } from '@nestjs/common';
+import { Ctx, EventPattern, KafkaContext, Payload } from '@nestjs/microservices';
+import { ConsumerDrain } from '../common/consumer-drain.js';
+import type { Envelope } from '../common/contract.js';
+import type { PaymentEventData } from '../common/events.js';
+import {
+  commitMessage,
+  envelopeProblem,
+  metaOf,
+  sourceOf,
+} from '../common/kafka-helpers.js';
+import { PAYMENT_COMPLETED, PAYMENT_FAILED } from '../common/kafka.js';
+import { JsonLogger } from '../common/logger.js';
+import { OrdersService } from './orders.service.js';
+
+const logger = new JsonLogger('order-service');
+
+@Controller()
+export class PaymentEventsController {
+  constructor(
+    private readonly orders: OrdersService,
+    private readonly drain: ConsumerDrain,
+  ) {}
+
+  // Nest 12 types event handlers as (data, ...args: unknown[]), which rejects a
+  // typed KafkaContext parameter; the cast keeps the signature checked.
+  @(EventPattern(PAYMENT_COMPLETED) as MethodDecorator)
+  handleCompleted(
+    @Payload() envelope: Envelope<PaymentEventData>,
+    @Ctx() context: KafkaContext,
+  ): Promise<void> {
+    return this.apply(envelope, 'PAID', context);
+  }
+
+  @(EventPattern(PAYMENT_FAILED) as MethodDecorator)
+  handleFailed(
+    @Payload() envelope: Envelope<PaymentEventData>,
+    @Ctx() context: KafkaContext,
+  ): Promise<void> {
+    return this.apply(envelope, 'FAILED', context);
+  }
+
+  private async apply(
+    envelope: Envelope<PaymentEventData>,
+    status: 'PAID' | 'FAILED',
+    context: KafkaContext,
+  ): Promise<void> {
+    const source = sourceOf(context);
+    const meta = metaOf(envelope, source);
+
+    this.drain.attach(context.getConsumer(), source.topic);
+    this.drain.enter();
+    try {
+      const problem = envelopeProblem(envelope);
+      if (problem || typeof envelope.data?.orderId !== 'string') {
+        logger.warn({
+          event: 'invalid-payment-event',
+          ...meta,
+          reason: problem ?? 'data.orderId wajib diisi',
+        });
+        await commitMessage(context);
+        return;
+      }
+
+      const changed = await this.orders.markStatus(envelope.data.orderId, status);
+      await commitMessage(context);
+      logger.log({
+        event: 'order.status-applied',
+        orderId: envelope.data.orderId,
+        status,
+        changed,
+        ...meta,
+      });
+    } finally {
+      this.drain.leave();
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "proyek-start",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "create-topics": "node scripts/create-topics.js",
+    "start:order": "node dist/order/main.js",
+    "start:payment": "node dist/payment/main.js",
+    "start:retry": "node dist/payment/retry-main.js",
+    "start:notification": "node dist/notification/main.js",
+    "test": "npm run build && node --test test/integration.test.js"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.4.0",
+    "@nestjs/core": "12.4.0",
+    "@nestjs/microservices": "12.4.0",
+    "@nestjs/platform-express": "12.4.0",
+    "kafkajs": "2.2.4",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@testcontainers/kafka": "12.2.1",
+    "@testcontainers/postgresql": "12.2.1",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "testcontainers": "12.2.1",
+    "typescript": "5.9.3"
+  }
+}
