@@ -13,26 +13,21 @@ Perintah di bawah dijalankan dari `proyek/solution/` (atau `proyek/start/`).
 
 ## Arsitektur
 
-```text
-POST /orders
-   │
-   ▼
-order-service ── tx: proyek_orders + proyek_order_outbox ──► outbox poller ──► order.created.v1
-                                                                      │
-                                                                      ▼
-                                                        payment-service (group payment-service)
-                                                          tx: proyek_processed_events + proyek_payments + proyek_payment_outbox
-                                                                      │
-                                                ┌─────────────────────┴─────────────────────┐
-                                                ▼                                           ▼
-                                    payment.completed.v1                        payment.failed.v1
-                                                │                                           │
-                                                └─────────────────────┬─────────────────────┘
-                                                                      ▼
-                                                   notification-service (group notification-service)
-                                                   tx: proyek_processed_events + proyek_notifications
-                                                                      │
-                                        order-service (group order-service) mengubah status order
+```mermaid
+flowchart TD
+  client["POST /orders"] --> order["order-service<br/>tx: proyek_orders + proyek_order_outbox"]
+  order --> poller["outbox poller"]
+  poller --> created[("order.created.v1")]
+  created --> payment["payment-service<br/>group payment-service<br/>tx: proyek_processed_events + proyek_payments + proyek_payment_outbox"]
+  payment -- gagal --> retry[("order.created.v1.payment-service.retry")]
+  retry --> worker["retry worker<br/>group payment-service-retry<br/>logika payment yang sama"]
+  worker -- "gagal 2x" --> dlt[("order.created.v1.payment-service.dlt")]
+  payment --> completed[("payment.completed.v1")]
+  payment --> failed[("payment.failed.v1")]
+  completed --> notif["notification-service<br/>group notification-service<br/>tx: proyek_processed_events + proyek_notifications"]
+  failed --> notif
+  completed --> status["order-service<br/>group order-service<br/>ubah status order"]
+  failed --> status
 ```
 
 - Outbox: perubahan bisnis dan event keluar ditulis dalam satu transaksi Postgres. Tidak ada dual-write.

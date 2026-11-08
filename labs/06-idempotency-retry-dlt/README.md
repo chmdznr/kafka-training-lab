@@ -15,11 +15,12 @@ Kalau tertinggal, pakai `solution/` dan ikuti langkah di bawah.
 
 ## Topologi yang dipakai
 
-```text
-order.created.v1
-   └─ payment-service (group payment-service)
-        gagal → order.created.v1.payment-service.retry   (group payment-service-retry)
-                   gagal 2x → order.created.v1.payment-service.dlt
+```mermaid
+flowchart TD
+  main[("order.created.v1")] --> pay["payment-service<br/>group payment-service"]
+  pay -- gagal --> retry[("order.created.v1.payment-service.retry")]
+  retry --> worker["retry worker<br/>group payment-service-retry"]
+  worker -- "gagal 2x" --> dlt[("order.created.v1.payment-service.dlt")]
 ```
 
 Retry worker adalah proses terpisah dengan consumer group sendiri. Backoff dijalankan dengan `await sleep(...)` di worker itu, jadi pesan yang sedang menunggu tidak menahan consumer utama.
