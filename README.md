@@ -103,6 +103,10 @@ dibaca consumer dari awal.
 Detail kontrak untuk tiga event utama ada di
 `labs/03-kontrak-event/solution/kontrak-event.md`.
 
+Ringkasan konfigurasi producer, consumer, NestJS, pola reliability, dan perintah
+CLI ada di [CHEATSHEET.md](CHEATSHEET.md) (versi cetak satu halaman:
+[CHEATSHEET.pdf](CHEATSHEET.pdf)).
+
 ## Daftar lab
 
 | Lab | Topik | Folder |
