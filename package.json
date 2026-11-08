@@ -1,0 +1,21 @@
+{
+  "name": "kafka-training-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lab hands-on training Kafka 2 hari untuk developer Node.js/NestJS",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "smoke": "node scripts/smoke.js",
+    "smoke:sasl": "node scripts/smoke.js --sasl-only",
+    "envelope:check": "node labs/03-kontrak-event/solution/envelope-check.js",
+    "setup:native": "node scripts/ensure-native.js"
+  },
+  "dependencies": {
+    "@confluentinc/kafka-javascript": "1.11.0",
+    "@confluentinc/schemaregistry": "1.11.0",
+    "avsc": "5.7.9",
+    "pg": "8.23.1"
+  }
+}
