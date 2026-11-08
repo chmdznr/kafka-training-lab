@@ -7,7 +7,7 @@ Command: `./scripts/verify-env.sh` (dari `lab/`)
 ```
 Pemeriksaan environment lab Kafka
 OS: Darwin 27.2.0 arm64
-Direktori: /Users/chmdznr/work/achmad/training-kafka/lab
+Direktori: <repo>
 
 == Docker
   PASS  docker 29.8.2

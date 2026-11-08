@@ -36,7 +36,7 @@ $ ls node_modules/@confluentinc 2>/dev/null || echo NO_LOCAL_CONFLUENT
 NO_LOCAL_CONFLUENT
 
 $ node -e "console.log(require.resolve('@confluentinc/kafka-javascript'))"
-/Users/chmdznr/work/achmad/training-kafka/lab/node_modules/@confluentinc/kafka-javascript/lib/index.js
+<repo>/node_modules/@confluentinc/kafka-javascript/lib/index.js
 
 $ npm run create-topics
 topic order.created.v1 sudah ada
@@ -60,7 +60,7 @@ $ rm -rf node_modules && npm ci
 added 115 packages in 726ms
 
 $ node -e "console.log(require.resolve('@confluentinc/kafka-javascript'))"
-/Users/chmdznr/work/achmad/training-kafka/lab/node_modules/@confluentinc/kafka-javascript/lib/index.js
+<repo>/node_modules/@confluentinc/kafka-javascript/lib/index.js
 
 $ npm run build
 > lab09-observability-security-start@1.0.0 build
