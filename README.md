@@ -8,11 +8,13 @@ Skenario yang dipakai adalah toko daring sederhana: `order → payment → notif
 - Docker Desktop (macOS/Windows via WSL2) atau Docker Engine + Compose v2.
 - Node.js 24 LTS. Versi ada di `.nvmrc`; jalankan `nvm use`.
 - RAM minimal 16 GB dan ruang disk kosong 20 GB.
-- Semua perintah dijalankan dari direktori `lab/`.
+- Perintah di README ini dijalankan dari akar repo (folder hasil clone, disebut `lab/` di materi).
 
 ## Mulai cepat
 
 ```bash
+git clone https://github.com/chmdznr/kafka-training-lab.git
+cd kafka-training-lab
 nvm use
 npm ci
 npm run setup:native
