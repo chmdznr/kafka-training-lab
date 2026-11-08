@@ -52,7 +52,7 @@ Buka template `labs/03-kontrak-event/start/kontrak-event.md`, lalu isi bagian
 `payment.completed.v1`, `payment.failed.v1`), dan contoh payload. Kontrak yang
 sudah jadi ada di `solution/kontrak-event.md`; bandingkan setelah selesai.
 
-Poin yang dinilai asisten:
+Checklist review (cek sendiri, lalu tukar kontrak dengan teman sebelah):
 
 - Nama topic mengikuti `<domain>.<event>.v<versi>`.
 - Key `orderId` dipakai konsisten untuk event order dan payment.
@@ -113,4 +113,5 @@ consumer. Ini alasan kontrak dan validasi harus ada di kode, bukan di broker.
 1. `validateEnvelope` menolak event tanpa `eventId` dan tanpa `correlationId`
    (ditunjukkan oleh `start/envelope-check.js` atau `solution/envelope-check.js`).
 2. Kontrak `order.created.v1`, `payment.completed.v1`, dan `payment.failed.v1`
-   sudah lengkap dan lulus review asisten.
+   sudah lengkap dan memenuhi checklist review di atas (dicek bersama teman
+   sebelah).
