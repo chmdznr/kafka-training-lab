@@ -109,11 +109,11 @@ curl -s -X POST localhost:3000/orders \
 
 ```bash
 cd ../../..
-docker compose exec kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
+docker compose exec -T kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
   --bootstrap-server localhost:29092 \
   --topic order.created.v1 \
-  --from-beginning --max-messages 1 --timeout-ms 5000 \
-  --formatter-property print.headers=true
+  --from-beginning --timeout-ms 5000 \
+  --formatter-property print.headers=true 2>/dev/null | grep lab09-correlation-1
 ```
 
 Header yang harus terlihat: `correlation-id`, `event-type`, dan `traceparent`. Nilai `traceparent` berformat W3C: `00-<32 hex trace-id>-<16 hex span-id>-<2 hex flags>`.
@@ -243,11 +243,11 @@ Payment-service mencatat `retry-scheduled`, retry worker mencatat `dead-lettered
 
 ```bash
 cd ../../..
-docker compose exec kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
+docker compose exec -T kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
   --bootstrap-server localhost:29092 \
   --topic order.created.v1.payment-service.dlt \
-  --from-beginning --max-messages 1 --timeout-ms 5000 \
-  --formatter-property print.headers=true
+  --from-beginning --timeout-ms 5000 \
+  --formatter-property print.headers=true 2>/dev/null | grep lab09-retry-1
 ```
 
 ### 7. Jaeger tidak disertakan

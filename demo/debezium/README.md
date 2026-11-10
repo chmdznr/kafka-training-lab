@@ -31,7 +31,7 @@ Dependency sudah dipasang dari root `lab/` (`npm ci` lalu
 ada. Kalau belum:
 
 ```bash
-cd lab/labs/07-outbox-transaksi/solution
+cd labs/07-outbox-transaksi/solution
 npm run setup
 ```
 
@@ -41,14 +41,14 @@ event ganda.
 
 ```bash
 # terminal 1
-cd lab/labs/07-outbox-transaksi/solution
+cd labs/07-outbox-transaksi/solution
 npm run order-service
 ```
 
 ## 3. Daftarkan connector
 
 ```bash
-cd lab/demo/debezium
+cd demo/debezium
 curl -s -X POST http://localhost:8083/connectors \
   -H 'content-type: application/json' \
   --data @connector.json
@@ -97,9 +97,9 @@ satu detik.
 Terminal 3:
 
 ```bash
-cd lab
+# dari akar repo lab/
 docker compose exec kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
-  --bootstrap-server localhost:9092 \
+  --bootstrap-server localhost:29092 \
   --topic order.created.v1 \
   --from-beginning \
   --formatter-property print.key=true \
@@ -133,7 +133,7 @@ event yang hilang.
 Catat posisi topik sebelum pause:
 
 ```bash
-cd lab
+# dari akar repo lab/
 docker compose exec kafka-1 /opt/kafka/bin/kafka-get-offsets.sh \
   --bootstrap-server localhost:29092 --topic order.created.v1
 ```

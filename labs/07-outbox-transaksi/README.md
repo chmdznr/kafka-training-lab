@@ -37,14 +37,15 @@ Dua lokasi kerja dipakai di lab ini:
 
 - Perintah Node dijalankan dari `lab/labs/07-outbox-transaksi/solution`
   (atau `.../start` kalau sedang mengerjakan bagian `// LATIHAN:`).
-- Perintah `docker compose` dijalankan dari root repo `lab/`.
+- Perintah `docker compose` dijalankan dari root repo `lab/`. Setiap terminal
+  baru di bawah dianggap dibuka di root repo `lab/`.
 
 ## Bagian A — Outbox
 
 ### 1. Siapkan database dan topik
 
 ```bash
-cd lab/labs/07-outbox-transaksi/solution
+cd labs/07-outbox-transaksi/solution
 npm run setup
 ```
 
@@ -61,14 +62,14 @@ database dan topic siap
 Terminal 1:
 
 ```bash
-cd lab/labs/07-outbox-transaksi/solution
+cd labs/07-outbox-transaksi/solution
 npm run order-service
 ```
 
 Terminal 2:
 
 ```bash
-cd lab/labs/07-outbox-transaksi/solution
+cd labs/07-outbox-transaksi/solution
 npm run publisher
 ```
 
@@ -88,9 +89,9 @@ log `outbox terkirim`.
 ### 4. Lihat event dan isi tabel outbox
 
 ```bash
-cd lab
+# dari akar repo lab/
 docker compose exec kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
-  --bootstrap-server localhost:9092 \
+  --bootstrap-server localhost:29092 \
   --topic order.created.v1 \
   --from-beginning \
   --formatter-property print.key=true \
@@ -112,7 +113,7 @@ Semua baris harus `terkirim = t`.
 Matikan ketiga broker. Order-service tetap bisa menulis ke Postgres.
 
 ```bash
-cd lab
+# dari akar repo lab/
 docker compose stop kafka-1 kafka-2 kafka-3
 ```
 
@@ -145,7 +146,7 @@ Publisher akan mengirim sendiri tanpa perlu di-restart. Tunggu sampai log
 berhenti menampilkan error (sekitar 10–30 detik), lalu jalankan pengecekan:
 
 ```bash
-cd lab/labs/07-outbox-transaksi/solution
+cd labs/07-outbox-transaksi/solution
 npm run check
 ```
 
@@ -154,7 +155,7 @@ Keluaran yang diharapkan:
 ```text
 order di database      : 4
 event lab ini          : 4 (key unik: 4)
-event lain diabaikan   : 0
+event lain diabaikan   : 11   (event dari lab lain; jumlahnya bervariasi)
 outbox belum terkirim  : 0
 ...
 HASIL: OK - tidak ada order tanpa event, tidak ada event tanpa order
@@ -192,7 +193,7 @@ Terminal baru (biarkan publisher tetap jalan atau hentikan, tidak dipakai di
 sini):
 
 ```bash
-cd lab/labs/07-outbox-transaksi/solution
+cd labs/07-outbox-transaksi/solution
 npm run payment-tx
 ```
 
@@ -203,9 +204,9 @@ bersama.
 ### 7. Lihat hasil dan offset
 
 ```bash
-cd lab
+cd ../../..          # dari solution/ ke akar repo lab/
 docker compose exec kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
-  --bootstrap-server localhost:9092 \
+  --bootstrap-server localhost:29092 \
   --topic payment.completed.v1 \
   --from-beginning \
   --isolation-level read_committed \
@@ -213,7 +214,7 @@ docker compose exec kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
   --formatter-property key.separator=' | '
 
 docker compose exec kafka-1 /opt/kafka/bin/kafka-consumer-groups.sh \
-  --bootstrap-server localhost:9092 --describe --group payment-tx
+  --bootstrap-server localhost:29092 --describe --group payment-tx
 ```
 
 `payment.completed.v1` berisi `causationId` yang menunjuk `eventId` order asal.
@@ -227,7 +228,7 @@ tertahan.
 ### 8. Bukti transaksi abort
 
 ```bash
-cd lab/labs/07-outbox-transaksi/solution
+cd labs/07-outbox-transaksi/solution
 npm run abort-demo
 ```
 

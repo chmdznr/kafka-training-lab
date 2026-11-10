@@ -132,7 +132,7 @@ Yang harus terlihat:
 - Baris baru di Postgres:
 
   ```bash
-  cd ../..
+  cd ../../..          # dari solution/ ke akar repo lab/
   docker compose exec postgres psql -U app -d shop \
     -c "select event_id, order_id, amount, currency from payment_events order by id desc limit 3"
   ```

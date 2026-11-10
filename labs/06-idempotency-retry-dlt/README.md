@@ -72,7 +72,7 @@ Script mengirim satu envelope dengan `eventId` yang sama dua kali ke `order.crea
 Periksa:
 
 ```bash
-cd ../..
+cd ../../..          # dari solution/ ke akar repo lab/
 docker compose exec postgres psql -U app -d shop \
   -c "select order_id, event_id, amount from payments order by id desc limit 5"
 docker compose exec postgres psql -U app -d shop \
@@ -110,7 +110,7 @@ Amati log:
 Periksa DLT:
 
 ```bash
-cd ../..
+cd ../../..          # dari solution/ ke akar repo lab/
 docker compose exec kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
   --bootstrap-server localhost:29092 \
   --topic order.created.v1.payment-service.dlt \

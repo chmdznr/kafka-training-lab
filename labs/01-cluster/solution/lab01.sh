@@ -143,7 +143,7 @@ echo
 echo "== 7. Buat topic compacted $STATE_TOPIC"
 kafka kafka-topics.sh --create --if-not-exists --topic "$STATE_TOPIC" \
   --partitions 3 --replication-factor 3 --config cleanup.policy=compact >/dev/null 2>&1 || true
-kafka kafka-topics.sh --alter --topic "$STATE_TOPIC" --add-config cleanup.policy=compact >/dev/null 2>&1 || true
+kafka kafka-configs.sh --alter --entity-type topics --entity-name "$STATE_TOPIC" --add-config cleanup.policy=compact >/dev/null 2>&1 || true
 CONFIG=$(kafka kafka-topics.sh --describe --topic "$STATE_TOPIC" | grep -o 'cleanup.policy=[a-z,]*' | head -1)
 [ "$CONFIG" = "cleanup.policy=compact" ] && echo "PASS  $STATE_TOPIC $CONFIG" \
   || { echo "FAIL  cleanup.policy tidak terpasang ($CONFIG)"; exit 1; }

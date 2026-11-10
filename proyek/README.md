@@ -54,7 +54,7 @@ Lalu di folder ini:
 cd proyek/solution
 npm ci
 npm run build
-docker compose -f ../../docker-compose.yml up -d   # dari akar repo lab
+docker compose -f ../../docker-compose.yml up -d   # compose file ada di akar repo lab/
 npm run create-topics
 ```
 
@@ -84,7 +84,7 @@ curl -s localhost:3000/orders/<orderId>
 
 cd ../..
 docker compose exec postgres psql -U app -d shop \
-  -c "select order_id, status, message from proyek_notifications order by id desc limit 3"
+  -c "select order_id, event_type, message from proyek_notifications order by id desc limit 3"
 ```
 
 Status order berubah `PENDING` → `PAID` setelah payment selesai. `amount` di atas 1.000.000 menghasilkan `FAILED` (payment.failed.v1).

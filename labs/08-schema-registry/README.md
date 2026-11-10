@@ -45,7 +45,7 @@ Folder `solution/` adalah referensi lengkap.
 ## 1. Daftarkan skema v1
 
 ```bash
-cd lab/labs/08-schema-registry/solution
+cd labs/08-schema-registry/solution
 node scripts/register.js avro/order-created-v1.avsc
 ```
 
@@ -167,7 +167,7 @@ Keluaran yang diharapkan:
 ```text
 subject lab08.order.created.v1-value
 status: DITOLAK registry
-... is not compatible with the latest version of the schema ...
+Schema being registered is incompatible with an earlier schema for subject "lab08.order.created.v1-value", details: [{errorType:"TYPE_MISMATCH", ...}]
 ```
 
 Registry tetap menyimpan dua versi sebelumnya; schema id tidak bertambah.

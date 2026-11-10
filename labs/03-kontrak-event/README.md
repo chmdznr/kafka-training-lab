@@ -70,7 +70,7 @@ node start/envelope-check.js
 Cadangan: `node solution/envelope-check.js`.
 
 Yang harus terlihat: envelope valid diterima, lalu setiap kasus rusak ditolak
-dengan pesan yang menyebut field bermasalah. Kasus mínimum yang wajib:
+dengan pesan yang menyebut field bermasalah. Kasus minimum yang wajib:
 
 - event tanpa `eventId`
 - event tanpa `correlationId`
