@@ -104,7 +104,7 @@ if [ "$DOCKER_OK" = 1 ]; then
 
   # The mini-project integration test (Testcontainers) needs these images on
   # training day; pull them now while the network can still be fixed.
-  TEST_IMAGES="confluentinc/cp-kafka:8.4.0 testcontainers/ryuk:0.14.0"
+  TEST_IMAGES="confluentinc/cp-kafka:8.4.1 testcontainers/ryuk:0.14.0"
   test_pull_ok=1
   for image in $TEST_IMAGES; do
     docker pull "$image" >>/tmp/verify-env-pull.log 2>&1 || test_pull_ok=0

@@ -115,7 +115,7 @@ services:
         condition: service_completed_successfully
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:8.4.0
+    image: confluentinc/cp-schema-registry:8.4.1
     restart: unless-stopped
     ports:
       - "8081:8081"
@@ -168,7 +168,7 @@ services:
         condition: service_healthy
 
   jaeger:
-    image: jaegertracing/jaeger:2.0.0
+    image: jaegertracing/jaeger:2.23.0
     profiles: ["tracing"]
     restart: unless-stopped
     command: ["--config", "/etc/jaeger/config.yaml"]

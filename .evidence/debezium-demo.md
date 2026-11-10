@@ -1,6 +1,6 @@
 # Evidence — Demo Debezium (CDC outbox)
 
-Tanggal: 2026-11-08
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
 Stack: compose `lab/`, Kafka 4.4.0 (3 node KRaft), Postgres 17
 (`wal_level=logical`), Debezium Connect `quay.io/debezium/connect:3.7.1.Final`
 (profile `demo`).
@@ -128,3 +128,18 @@ Kedua event muncul setelah resume, tanpa dibuat ulang:
   `envelope.eventId`.
 - Pause menghentikan pengiriman; insert tetap tertahan dan menyusul setelah
   resume. Tidak ada event hilang.
+
+## Run ulang 2026-11-11
+
+```
+docker compose --profile demo up -d   -> connect Started
+wal_level=logical
+POST connector -> 201; status connector dan task RUNNING (3.7.1.Final)
+event demo-cdc terbit di order.created.v1 dengan header id dan event-type
+offset sebelum pause = 57
+PUT pause -> 202; state PAUSED
+2 order masuk saat paused; offset tetap 57
+PUT resume -> 202; offset setelah resume = 59
+demo-cdc 1, demo-pause-1 1, demo-pause-2 1 (tanpa duplikat)
+DELETE connector -> 204; pg_replication_slots kosong
+```

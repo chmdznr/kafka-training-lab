@@ -86,7 +86,7 @@ test(
   'order -> payment -> notification dengan idempotency dan DLT',
   { timeout: 240_000 },
   async () => {
-    const kafkaContainer = await new KafkaContainer('confluentinc/cp-kafka:8.4.0').start();
+    const kafkaContainer = await new KafkaContainer('confluentinc/cp-kafka:8.4.1').start();
     const postgres = await new PostgreSqlContainer('postgres:17')
       .withDatabase('shop')
       .withUsername('app')
@@ -300,6 +300,14 @@ test(
         [poisonOrderId],
       );
       assert.equal(poisonPayments.rows[0].count, 0);
+
+      // --- 4. LATIHAN 7: amount di atas limit menjadi FAILED --------------
+      // Tambahkan satu kasus uji dengan pola bagian 1 (happy path):
+      //   - POST /orders dengan amount 2_000_000 (di atas PAYMENT_LIMIT);
+      //   - tunggu GET /orders/<orderId> berstatus 'FAILED' memakai waitFor;
+      //   - satu baris proyek_payments dengan status 'failed';
+      //   - satu baris proyek_notifications dengan event_type PAYMENT_FAILED
+      //     dan message yang memuat "gagal".
     } finally {
       for (const consumer of consumers) {
         await consumer.disconnect().catch(() => undefined);

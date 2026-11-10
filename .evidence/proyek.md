@@ -115,7 +115,7 @@ $ npm test
 ℹ fail 0
 ```
 
-Test menyalakan `confluentinc/cp-kafka:8.4.0` dan `postgres:17` lewat
+Test menyalakan `confluentinc/cp-kafka:8.4.1` dan `postgres:17` lewat
 Testcontainers, membuat topic RF 1, lalu memeriksa order `PAID`, duplikat yang
 tidak menambah baris, dan poison message yang masuk DLT.
 
@@ -147,3 +147,39 @@ diperbaiki di `solution/`:
 9. `dlt-check.js` menaruh `groupId`/`fromBeginning` di luar blok `kafkaJS`.
    Sudah dipindah sesuai API `@confluentinc/kafka-javascript`.
 10. Path `shared/envelope.js` di skrip `send-*.js` kurang satu `../`.
+
+## Run ulang 2026-11-11
+
+NestJS `12.4.2`, Testcontainers `confluentinc/cp-kafka:8.4.1`.
+
+```
+npm ci / npm run build: exit 0 (start/ dan solution/)
+order cust-1 amount 125000  -> PAID
+order cust-big amount 2000000 -> FAILED
+proyek_notifications: payment.failed.v1 "... gagal", payment.completed.v1 "... berhasil"
+
+fault-consumer-crash: OK PAID, payments 1, notifications 1, processed_events 1   exit 0
+fault-duplicate:      OK payments 1, processed_events 1, notifications 1         exit 0
+fault-poison:         OK ada di DLT, payments 0                                  exit 0
+fault-broker-down:    OK PAID, outbox terkirim 1, payments 1, notifications 1    exit 0
+stop-all: exit 0
+
+npm test
+✔ order -> payment -> notification dengan idempotency dan DLT (26286ms)
+ℹ tests 1  ℹ pass 1  ℹ fail 0
+```
+
+`test/integration.test.js` di `solution/` kini punya kasus keempat: order
+dengan `amount` 2000000 menjadi `FAILED`, satu baris `proyek_payments`
+berstatus `failed`, satu notifikasi `payment.failed.v1` berisi "gagal". Di log
+test: `order.status-applied ... "status":"FAILED"` dan
+`notification-stored ... gagal`.
+
+Uji mutasi (salinan sementara dengan `'FAILED'` diganti `'PAID'` pada kasus
+keempat, lalu dihapus):
+
+```
+ℹ pass 0
+ℹ fail 1
+  Error: timeout menunggu order FAILED; hasil terakhir: false
+```

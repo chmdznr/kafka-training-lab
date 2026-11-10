@@ -1,6 +1,6 @@
 # Evidence Lab 03
 
-Tanggal: 2026-11-08
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
 Host: macOS arm64, Docker 29.8.2, Compose 5.5.0, Node 24.22.1
 Commands (dari `labs/03-kontrak-event/`):
 
@@ -71,3 +71,21 @@ FAIL lab03 publish: LATIHAN: buat envelope dengan createEnvelope dan kirim event
 
 Setelah diisi, hasilnya sama dengan solution: 12 pemeriksaan envelope PASS dan
 event tanpa correlationId ditolak consumer.
+
+## Run ulang 2026-11-11
+
+Perintah sama, ditambah `npm run envelope:check` dari akar `lab/` (semua exit 0):
+
+```
+PASS lab03 envelope: 12 pemeriksaan
+PASS  produce 2 record ke order.created.v1 (1 valid, 1 tanpa correlationId)
+PASS  event valid lolos validateEnvelope dan header cocok
+PASS  event tanpa correlationId ditolak: Envelope tidak valid: correlationId wajib string tidak kosong
+PASS lab03 publish: envelope dipakai, event rusak ditolak consumer
+
+$ npm run envelope:check
+PASS lab03 envelope: 12 pemeriksaan
+```
+
+Catatan: `npm run envelope:check` menjalankan
+`labs/03-kontrak-event/solution/envelope-check.js`, bukan `start/`.

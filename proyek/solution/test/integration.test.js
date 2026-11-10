@@ -86,7 +86,7 @@ test(
   'order -> payment -> notification dengan idempotency dan DLT',
   { timeout: 240_000 },
   async () => {
-    const kafkaContainer = await new KafkaContainer('confluentinc/cp-kafka:8.4.0').start();
+    const kafkaContainer = await new KafkaContainer('confluentinc/cp-kafka:8.4.1').start();
     const postgres = await new PostgreSqlContainer('postgres:17')
       .withDatabase('shop')
       .withUsername('app')
@@ -300,6 +300,48 @@ test(
         [poisonOrderId],
       );
       assert.equal(poisonPayments.rows[0].count, 0);
+
+      // --- 4. amount di atas limit menjadi FAILED -------------------------
+      const failedResponse = await fetch(`${base}/orders`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          customerId: 'cust-limit',
+          amount: 2_000_000,
+          currency: 'IDR',
+        }),
+      });
+      assert.equal(failedResponse.status, 202);
+      const failedOrder = await failedResponse.json();
+
+      const rejected = await waitFor(
+        async () => {
+          const response = await fetch(`${base}/orders/${failedOrder.orderId}`);
+          if (response.status !== 200) {
+            return false;
+          }
+          const body = await response.json();
+          return body.status === 'FAILED' ? body : false;
+        },
+        30_000,
+        'order FAILED',
+      );
+      assert.equal(rejected.status, 'FAILED');
+
+      const failedPayments = await pool.query(
+        'SELECT status FROM proyek_payments WHERE order_id = $1',
+        [failedOrder.orderId],
+      );
+      assert.equal(failedPayments.rowCount, 1);
+      assert.equal(failedPayments.rows[0].status, 'failed');
+
+      const failedNotifications = await pool.query(
+        'SELECT event_type, message FROM proyek_notifications WHERE order_id = $1',
+        [failedOrder.orderId],
+      );
+      assert.equal(failedNotifications.rowCount, 1);
+      assert.equal(failedNotifications.rows[0].event_type, PAYMENT_FAILED);
+      assert.match(failedNotifications.rows[0].message, /gagal/);
     } finally {
       for (const consumer of consumers) {
         await consumer.disconnect().catch(() => undefined);

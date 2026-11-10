@@ -1,6 +1,6 @@
 # Evidence stack Docker
 
-Tanggal: 2026-11-08
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
 Host: macOS arm64, Docker 29.8.2, Compose 5.5.0
 
 ## Service
@@ -73,7 +73,87 @@ Diperiksa dengan `docker manifest inspect`; semua menyediakan `amd64` dan
 
 - apache/kafka:4.4.0
 - kafbat/kafka-ui:v1.5.0
-- confluentinc/cp-schema-registry:8.4.0
+- confluentinc/cp-schema-registry:8.4.1
 - postgres:17
 - quay.io/debezium/connect:3.7.1.Final
-- jaegertracing/jaeger:2.0.0
+- jaegertracing/jaeger:2.23.0
+- confluentinc/cp-kafka:8.4.1 (Testcontainers proyek)
+
+## Run ulang 2026-11-11
+
+Dari keadaan bersih (tidak ada container atau volume lab), setelah versi
+dinaikkan: Schema Registry `8.4.1`, Jaeger `2.23.0`, cp-kafka Testcontainers
+`8.4.1`.
+
+`docker compose up -d --wait`, lalu `docker compose ps`:
+
+```
+kafka-1 apache/kafka:4.4.0 Up 23 seconds (healthy)
+kafka-2 apache/kafka:4.4.0 Up 23 seconds (healthy)
+kafka-3 apache/kafka:4.4.0 Up 23 seconds (healthy)
+kafka-ui kafbat/kafka-ui:v1.5.0 Up 15 seconds
+postgres postgres:17 Up 23 seconds (healthy)
+schema-registry confluentinc/cp-schema-registry:8.4.1 Up 15 seconds
+```
+
+```
+npm run smoke
+PASS plaintext: produced + consumed lab.verify.v1 (RF3, 3 partitions)
+PASS sasl: produced + consumed lab.verify.v1 (RF3, 3 partitions)
+PASS smoke: PLAINTEXT dan SASL berfungsi
+
+curl http://localhost:8080/          -> 200
+curl http://localhost:8081/subjects  -> 200
+select version()                     -> PostgreSQL 17.11
+```
+
+`docker manifest inspect`: `cp-schema-registry:8.4.1`, `cp-kafka:8.4.1`, dan
+`jaeger:2.23.0` menyediakan `amd64` dan `arm64`.
+
+### Jaeger 2.23.0 (profile tracing)
+
+`jaeger/config.yaml` tidak berubah; log container berakhir dengan
+`Everything is ready. Begin running and processing data.` tanpa warning.
+
+```
+UI   http://localhost:16686/                 -> 200
+OTLP http://localhost:4318/v1/traces         -> 200
+     http://localhost:16686/api/services     -> 404
+     http://localhost:16686/api/v3/services  -> 200
+```
+
+`GET /api/services`, `/api/operations`, `/api/services/{service}/operations`,
+dan pencarian `GET /api/traces` dihapus di Jaeger v2.21.0 (breaking change
+"remove v1 http endpoints the ui no longer calls", PR #9260). Penggantinya
+`/api/v3/services`, `/api/v3/operations`, dan `/api/v3/traces`.
+`GET /api/traces/{traceID}` tetap ada. Tidak ada README lab yang memanggil
+endpoint lama.
+
+Bukti trace Lab 09: service Lab 09 solution dijalankan dengan
+OpenTelemetry auto-instrumentation yang dipasang di luar repo
+(`node --import @opentelemetry/auto-instrumentations-node/register`,
+`OTEL_SERVICE_NAME=lab09-order-service` / `lab09-payment-service`, OTLP ke
+`localhost:4318`). Kode lab tidak diubah. Request:
+
+```
+curl -X POST localhost:3000/orders -H 'x-correlation-id: lab09-jaeger-2' \
+  -H 'traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-b7ad6b7169203331-01' ...
+{"orderId":"7acb17de-...","correlationId":"lab09-jaeger-2","traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-b7ad6b7169203331-01"}
+
+GET /api/v3/services
+{"services":["jaeger","unknown_service:node","lab09-payment-service","lab09-order-service"]}
+
+GET /api/v3/traces/4bf92f3577b34da6a3ce929d0e0e4736
+lab09-order-service | POST                      | kind 2
+lab09-order-service | middleware - <anonymous>  | kind 1
+lab09-order-service | middleware - jsonParser   | kind 1
+lab09-order-service | middleware - urlencodedParser | kind 1
+lab09-order-service | request handler - /orders | kind 1
+lab09-order-service | tcp.connect               | kind 1
+```
+
+UI `http://localhost:16686/trace/4bf92f3577b34da6a3ce929d0e0e4736` menampilkan
+`lab09-order-service: POST`, 6 span, Services 1. Trace id sama dengan
+`traceparent` di log Lab 09. Span producer/consumer Kafka tidak muncul:
+Lab 09 sendiri tidak memasang OpenTelemetry (README Lab 09 bagian 7), dan
+auto-instrumentation dari luar hanya menghasilkan span HTTP order-service.

@@ -48,3 +48,18 @@ Perbaikan yang diperlukan agar `start/` build:
 - `proyek/start/` dibuat dari `solution/` dengan gap `// LATIHAN:` di baris
   outbox order, publish outbox poller, dedup payment, retry/DLT payment, dan
   dedup notification.
+
+## Run ulang 2026-11-11
+
+Setelah NestJS dinaikkan ke `12.4.2` (`npm install --save-exact` di setiap
+folder, lockfile hanya berubah pada paket `@nestjs/*`):
+
+```
+labs/05-nestjs/start                 ci=0 build=0 nest=12.4.2
+labs/06-idempotency-retry-dlt/start  ci=0 build=0 nest=12.4.2
+labs/09-observability-security/start ci=0 build=0 nest=12.4.2
+proyek/start                         ci=0 build=0 nest=12.4.2
+```
+
+`solution/` keempat folder juga `npm ci` + `npm run build` exit 0 sebelum
+skenario masing-masing dijalankan.

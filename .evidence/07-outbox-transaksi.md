@@ -1,6 +1,6 @@
 # Evidence — Lab 07 Outbox dan transaksi
 
-Tanggal: 2026-11-08
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
 Stack: compose `lab/`, Kafka 4.4.0 (3 node KRaft, RF3, min.insync.replicas=2),
 Postgres 17.
 
@@ -218,3 +218,30 @@ payment-tx order.created.v1 2 - 0 -
 
 Event pembayaran untuk order tersebut ada di `payment.completed.v1` dengan
 `causationId` yang cocok.
+
+## Run ulang 2026-11-11
+
+```
+POST /orders -> HTTP 201; publisher: outbox terkirim
+consumer (localhost:29092) menemukan event order tersebut; outbox terkirim = t
+
+3 broker dihentikan, 3 order masuk (201 201 201)
+pending while down: 3     publisher fail logs: 2
+broker dinyalakan:   pending after start: 0
+
+npm run check
+order di database      : 4
+event lab ini          : 4 (key unik: 4)
+event lain diabaikan   : 15
+outbox belum terkirim  : 0
+event tidak valid      : 0
+key != data.orderId    : 0
+eventId duplikat       : 0
+HASIL: OK - tidak ada order tanpa event, tidak ada event tanpa order
+
+payment-tx: lag 0 di ketiga partisi order.created.v1
+abort-demo:
+read_committed   melihat : [committed]
+read_uncommitted melihat : [aborted, committed]
+HASIL: OK
+```

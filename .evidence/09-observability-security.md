@@ -271,3 +271,25 @@ Semua proses `payment-service`, `order-service`, dan retry worker dari run ini
 dihentikan dengan SIGTERM. Port 3100, 3101, 3102, dan 3103 tidak lagi listen.
 
 Jaeger tidak dipakai untuk lab ini; OpenTelemetry tidak disertakan (lihat README).
+
+## Run ulang 2026-11-11
+
+NestJS `12.4.2`; `npm ci` dan `npm run build` exit 0 di `start/` dan
+`solution/`.
+
+```
+log lab09-correlation-1:
+   1 "service":"order-service"   "event":"order.created" "traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+   1 "service":"payment-service" "event":"received"      "traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+   1 "service":"payment-service" "event":"processed"     "traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+
+langkah 3 (perintah README, ... | grep lab09-correlation-1):
+correlation-id:lab09-correlation-1,event-type:order.created.v1,traceparent:00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+
+lag (PROCESSING_DELAY_MS=2000): p0 8, p1 7, p2 6  ->  setelah restart normal: 0, 0, 0
+sasl-check --password salah: exit 1, "SASL authentication error: Authentication failed during authentication due to invalid credentials"
+sasl-check: exit 0, {"event":"sasl-check-ok","username":"app","mechanism":"SCRAM-SHA-512"}
+DLT: correlation-id:lab09-retry-1,traceparent:00-aaaabbbbccccddddeeeeffff00001111-2222333344445555-01
+```
+
+Bukti trace di Jaeger 2.23.0 dicatat di `00-stack.md`, bagian run ulang.

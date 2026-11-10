@@ -18,6 +18,8 @@ Tujuan:
    ditulis dengan skema v2.
 4. Melihat registry menolak perubahan yang breaking, lengkap dengan pesan
    error-nya.
+5. Melihat bahwa menghapus field lolos di `BACKWARD` tetapi ditolak di
+   `FORWARD`, karena yang dirusak adalah consumer lama.
 
 ## Prasyarat
 
@@ -40,6 +42,8 @@ Semua perintah Node di bawah dijalankan dari
 `lab/labs/08-schema-registry/solution`. Kalau mengerjakan latihan, jalankan dari
 `.../start`; bagian yang harus diisi ditandai `// LATIHAN:` di
 `scripts/register.js`, dan file `avro/order-created-v2.avsc` belum ada.
+`avro/order-created-removed-field.avsc` dan `scripts/check-compat.js` sudah
+tersedia di kedua folder.
 Folder `solution/` adalah referensi lengkap.
 
 ## 1. Daftarkan skema v1
@@ -179,29 +183,80 @@ curl -s http://localhost:8081/subjects/lab08.order.created.v1-value/versions
 
 Harus tetap `[1,2]`.
 
-## Catatan penting tentang menghapus field
+## 8. Hapus field: BACKWARD menerima, FORWARD menolak
 
-Menghapus field **tidak** ditolak oleh mode `BACKWARD`. Skema baru (reader)
-mengabaikan field lama yang tidak dikenalnya, jadi skema baru masih bisa
-membaca data lama. Yang rusak adalah arah sebaliknya: consumer dengan skema
-lama tidak bisa membaca data baru yang tidak lagi punya field tersebut. Itu
-masalah `FORWARD`, bukan `BACKWARD`.
+File `avro/order-created-removed-field.avsc` sama dengan v2, tetapi field
+`data.customerId` dihapus. Langkah ini tidak mendaftarkan skema tersebut di
+`BACKWARD`. Skrip `scripts/check-compat.js` hanya menguji kompatibilitas
+terhadap versi terakhir (v2) memakai level compatibility subject saat ini,
+tanpa menambah versi.
 
-Perubahan yang ditolak `BACKWARD` adalah yang membuat skema baru tidak bisa
-membaca data lama, misalnya:
+Uji di `BACKWARD`:
+
+```bash
+node scripts/check-compat.js avro/order-created-removed-field.avsc
+```
+
+Keluaran:
+
+```text
+subject lab08.order.created.v1-value, compatibility BACKWARD
+avro/order-created-removed-field.avsc vs versi terakhir: KOMPATIBEL
+```
+
+`BACKWARD` menerima karena skema baru (reader) cukup mengabaikan `customerId`
+pada data lama.
+
+Sekarang ubah ke `FORWARD`, lalu uji dan coba daftarkan skema yang sama:
+
+```bash
+node scripts/set-compat.js FORWARD
+node scripts/check-compat.js avro/order-created-removed-field.avsc
+node scripts/register.js avro/order-created-removed-field.avsc
+```
+
+Keluaran:
+
+```text
+compatibility lab08.order.created.v1-value: FORWARD
+subject lab08.order.created.v1-value, compatibility FORWARD
+avro/order-created-removed-field.avsc vs versi terakhir: TIDAK KOMPATIBEL
+subject lab08.order.created.v1-value
+status: DITOLAK registry
+Schema being registered is incompatible with an earlier schema for subject "lab08.order.created.v1-value", details: [{errorType:"READER_FIELD_MISSING_DEFAULT_VALUE", description:"The field 'customerId' at path '/fields/5/type/fields/1' in the old schema has no default value and is missing in the new schema", ...}]
+```
+
+`FORWARD` menuntut skema lama bisa membaca data yang ditulis skema baru.
+Consumer lama masih membutuhkan `customerId`, dan field itu tidak punya default
+di skema lama, jadi data tanpa `customerId` tidak bisa dibacanya.
+
+Urutannya penting. Uji `FORWARD` selagi versi terakhir masih punya
+`customerId`. Kalau skema tanpa `customerId` sudah telanjur didaftarkan di
+`BACKWARD`, pemeriksaan `FORWARD` berikutnya membandingkan dengan versi tanpa
+field itu dan bisa lolos.
+
+Kembalikan ke `BACKWARD` dan pastikan versi tidak bertambah:
+
+```bash
+node scripts/set-compat.js BACKWARD
+curl -s http://localhost:8081/subjects/lab08.order.created.v1-value/versions
+```
+
+Keluaran: `compatibility lab08.order.created.v1-value: BACKWARD`, lalu `[1,2]`.
+`node scripts/consume.js --old-reader` tetap membaca semua event seperti di
+langkah 6.
+
+Perubahan lain yang ditolak `BACKWARD` adalah yang membuat skema baru tidak
+bisa membaca data lama, misalnya:
 
 - mengubah tipe field (`double` menjadi `string`), seperti pada langkah 7;
 - menambah field baru **tanpa** default;
 - mempersempit union, misalnya `["null","string"]` menjadi `"string"`.
 
-Kalau ingin membuktikan penghapusan field ditolak, ubah compatibility ke
-`FORWARD` dulu (`node scripts/set-compat.js FORWARD`) lalu daftarkan skema tanpa
-field tersebut.
-
 ## Selesai jika
 
-Perubahan breaking ditolak registry dan consumer lama tetap membaca event versi
-baru.
+Perubahan breaking ditolak registry, consumer lama tetap membaca event versi
+baru, dan hapus field lolos di `BACKWARD` tetapi ditolak di `FORWARD`.
 
 Bukti yang dikumpulkan:
 
@@ -209,3 +264,6 @@ Bukti yang dikumpulkan:
 2. Langkah 6 (`--old-reader`) mencetak event v2 tanpa error.
 3. Langkah 7 menghasilkan `status: DITOLAK registry` dan daftar versi tetap
    `[1,2]`.
+4. Langkah 8 menghasilkan `KOMPATIBEL` di `BACKWARD`, `DITOLAK registry`
+   (`READER_FIELD_MISSING_DEFAULT_VALUE`) di `FORWARD`, compatibility kembali
+   `BACKWARD`, dan daftar versi tetap `[1,2]`.

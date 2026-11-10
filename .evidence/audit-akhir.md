@@ -28,3 +28,18 @@ Temuan yang diperbaiki selama audit:
 - `avsc` dipakai langsung oleh Lab 08 tetapi hanya transitif; kini dideklarasikan di root.
 - `kafka-console-consumer --property` sudah deprecated di Kafka 4.4; README memakai `--formatter-property`.
 - README Lab 01 sampai 05: alur `start/` lebih dulu dan folder kerja yang benar.
+
+## Run ulang 2026-11-11
+
+| Langkah | Hasil |
+|---|---|
+| `verify-env.sh`, `npm run smoke` | PASS 13 / FAIL 0; PLAINTEXT dan SASL PASS |
+| Lab 01 sampai 04 | Semua exit 0; rebalance classic 733 ms / 32 ms, consumer 2975 ms / 36 ms |
+| Lab 05 | HTTP 202, SIGTERM exit 143, tanpa duplikat setelah restart |
+| Lab 06 | dedup 1 baris; poison ke DLT; replay 2x tetap 1 baris |
+| Lab 07 | pending 3 -> 0; `npm run check` HASIL OK; payment-tx lag 0; abort-demo OK |
+| Lab 08 | langkah 1 sampai 7 sama; langkah 8 hapus field: BACKWARD `KOMPATIBEL`, FORWARD ditolak `READER_FIELD_MISSING_DEFAULT_VALUE`, versi `[1,2]` |
+| Lab 09 | traceparent sama di log order dan payment; lag 0; SASL salah exit 1, benar exit 0; traceparent sampai DLT |
+| Jaeger 2.23.0 | UI 200, OTLP 200, `/api/v3/services` 200; trace Lab 09 `4bf92f35...` tampil di UI |
+| Proyek | 4 fault script OK; `npm test` 1 pass (kasus `FAILED` baru ikut diuji) |
+| Demo Debezium | connector RUNNING; offset 57 -> 57 saat paused -> 59 setelah resume; slot terhapus |

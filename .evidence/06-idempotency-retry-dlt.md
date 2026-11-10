@@ -147,3 +147,27 @@ tidak menerbitkan ulang.
 - Topic `order.created.v1` dipakai bersama lab/agen lain. Consumer memvalidasi
   envelope dan mencatat `invalid-event` untuk pesan yang tidak sesuai kontrak;
   pesan tersebut tidak memblokir partisi.
+
+## Run ulang 2026-11-11
+
+NestJS `12.4.2`; `npm ci` dan `npm run build` exit 0 di `start/` dan
+`solution/`.
+
+```
+topic order.created.v1.payment-service.retry dibuat (3 partisi, RF 3, min.insync.replicas=2)
+topic order.created.v1.payment-service.dlt dibuat (3 partisi, RF 3, min.insync.replicas=2)
+
+send-duplicate: rows for first id 3251bcc9-...: 1
+   1 "event":"duplicate-skipped"
+   1 "event":"processed"
+
+send-poison: retry-scheduled (order.created.v1) -> retry-scheduled (retry topic) -> dead-lettered
+DLT headers: event-type, correlation-id, original-topic:order.created.v1, original-partition:2,
+             original-offset:5, retry-count:2, error-message:amount 5000000 melebihi batas 1000000; ...
+
+replay: {"event":"replay-done","replayed":1,"skipped":0,"filtered":0}
+payments 4030353f-...: 1
+replay kedua: payments tetap 1
+```
+
+`payment_limits` dikembalikan ke 1000000 setelah uji.

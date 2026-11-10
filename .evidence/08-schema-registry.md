@@ -1,7 +1,7 @@
 # Evidence — Lab 08 Schema Registry
 
-Tanggal: 2026-11-08
-Stack: compose root `lab/` (Kafka 4.4.0 KRaft 3 node, Schema Registry 8.4.0).
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
+Stack: compose root `lab/` (Kafka 4.4.0 KRaft 3 node, Schema Registry 8.4.1 sejak run ulang 2026-11-11).
 Topic sandbox: `lab08.order.created.v1`, subject `lab08.order.created.v1-value`.
 
 Catatan lingkungan: npm di mesin verifikasi memblokir install script secara
@@ -118,3 +118,41 @@ ada), seluruh urutan dijalankan lagi dan hasilnya sama: v1 id 1, v2 id 2,
 consumer membaca 4 event Avro dengan 0 record dilewati, old reader membaca 4
 event v2, breaking ditolak, `versions [1,2]`. `produce.js` membuat topik
 `lab08.order.created.v1` dari nol pada run ini.
+
+## Run ulang 2026-11-11
+
+Schema Registry `8.4.1`, stack bersih. Langkah 1 sampai 7 sama dengan di atas
+(v1 id 1, v2 id 2, old reader dan consumer biasa masing-masing 4 event, 0
+record dilewati, breaking ditolak `TYPE_MISMATCH`, versi `[1,2]`).
+
+Langkah 8 baru (hapus field):
+
+```bash
+$ node scripts/check-compat.js avro/order-created-removed-field.avsc
+subject lab08.order.created.v1-value, compatibility BACKWARD
+avro/order-created-removed-field.avsc vs versi terakhir: KOMPATIBEL
+$ node scripts/set-compat.js FORWARD
+compatibility lab08.order.created.v1-value: FORWARD
+$ node scripts/check-compat.js avro/order-created-removed-field.avsc
+subject lab08.order.created.v1-value, compatibility FORWARD
+avro/order-created-removed-field.avsc vs versi terakhir: TIDAK KOMPATIBEL
+$ echo $?
+1
+$ node scripts/register.js avro/order-created-removed-field.avsc
+subject lab08.order.created.v1-value
+status: DITOLAK registry
+Schema being registered is incompatible with an earlier schema for subject "lab08.order.created.v1-value", details: [{errorType:"READER_FIELD_MISSING_DEFAULT_VALUE", description:"The field 'customerId' at path '/fields/5/type/fields/1' in the old schema has no default value and is missing in the new schema", additionalInfo:"customerId"}, {oldSchemaVersion: 2}, ...
+$ node scripts/set-compat.js BACKWARD
+compatibility lab08.order.created.v1-value: BACKWARD
+$ curl -s http://localhost:8081/subjects/lab08.order.created.v1-value/versions
+[1,2]
+$ curl -s http://localhost:8081/config/lab08.order.created.v1-value
+{"compatibilityLevel":"BACKWARD"}
+$ node scripts/consume.js --old-reader
+dibaca: 4 event Avro
+dilewati: 0 record yang bukan Avro Schema Registry (misalnya event JSON dari lab lain)
+consumer lama (reader schema v1) tetap membaca semua event di atas.
+```
+
+Dari `start/`, `node scripts/check-compat.js avro/order-created-removed-field.avsc`
+menghasilkan keluaran `KOMPATIBEL` yang sama (exit 0).

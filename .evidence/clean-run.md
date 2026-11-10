@@ -1,6 +1,6 @@
 # Evidence clean run (urutan peserta)
 
-Tanggal: 2026-11-08
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
 Host: macOS arm64, Docker 29.8.2, Compose 5.5.0, Node 24.22.1
 
 Urutan yang dijalankan dari `lab/`:
@@ -64,3 +64,22 @@ Processed a total of 2 messages
 Record pertama valid (punya `correlation-id`); record kedua sengaja rusak
 (tidak punya `correlationId`). Tidak ada record uji Lab 01, 02, atau 04 di
 topic kanonik.
+
+## Run ulang 2026-11-11
+
+Dari keadaan bersih (tidak ada container atau volume lab), urutan yang sama:
+
+```
+docker compose up -d --wait
+npm run smoke                    -> exit 0
+./scripts/verify-env.sh          -> exit 0, PASS 13 FAIL 0
+Lab 01 solution/lab01.sh         -> exit 0
+Lab 02 ordering.js, durability.js -> exit 0, exit 0
+Lab 03 envelope-check.js, publish-order.js, npm run envelope:check -> exit 0
+Lab 04 assignments.js, rebalance.js, replay.js -> exit 0
+```
+
+Dilanjutkan Lab 05, 06, 07, 08, 09, Jaeger (profile tracing), proyek, dan demo
+Debezium di stack yang sama; hasil per lab ada di bagian "Run ulang
+2026-11-11" masing-masing berkas. Stack diturunkan dengan
+`docker compose --profile demo --profile tracing down -v`.

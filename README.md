@@ -77,10 +77,10 @@ PLAINTEXT `kafka-1:29092`, `kafka-2:29092`, `kafka-3:29092`.
 |---|---|
 | Kafka (KRaft, 3 node broker+controller) | `apache/kafka:4.4.0` |
 | Kafka UI | `kafbat/kafka-ui:v1.5.0` |
-| Schema Registry | `confluentinc/cp-schema-registry:8.4.0` |
+| Schema Registry | `confluentinc/cp-schema-registry:8.4.1` |
 | Postgres | `postgres:17` (`wal_level=logical`) |
 | Debezium Connect (profile `demo`) | `quay.io/debezium/connect:3.7.1.Final` |
-| Jaeger (profile `tracing`) | `jaegertracing/jaeger:2.0.0` |
+| Jaeger (profile `tracing`) | `jaegertracing/jaeger:2.23.0` |
 
 Konfigurasi cluster: 3 partisi default, replication factor 3,
 `min.insync.replicas=2`, `auto.create.topics.enable=false`. Topic Kafka harus

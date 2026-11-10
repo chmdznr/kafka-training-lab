@@ -1,6 +1,6 @@
 # Evidence Lab 04
 
-Tanggal: 2026-11-08
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
 Host: macOS arm64, Docker 29.8.2, Compose 5.5.0, Node 24.22.1
 Commands (dari `labs/04-consumer-group/`, clean run):
 
@@ -35,8 +35,9 @@ PASS lab04 rebalance: classic moved=703 ms/unaffected=41 ms, consumer moved=2938
   `kafka-consumer-groups.sh --describe --group <group> --state` ->
   `ASSIGNMENT-STRATEGY roundrobin`. Semua partisi dicabut saat rebalance;
   jedanya singkat di cluster lokal.
-- `consumer`: KIP-848, `group.remote.assignor` dipilih broker (default
-  `uniform`); heartbeat diatur broker `group.consumer.heartbeat.interval.ms`
+- `consumer`: KIP-848, assignor dijalankan broker. Daftarnya dari config
+  broker `group.consumer.assignors` (default `uniform,range`); client bisa
+  memilih lewat config client `group.remote.assignor`. Heartbeat diatur broker `group.consumer.heartbeat.interval.ms`
   (default 5000 ms). Partisi yang berpindah menunggu assignment berikutnya,
   sedangkan consumer yang tidak menerima partisi pindahan terus memproses.
 - Angka bergantung mesin, beban, dan backlog; yang dibandingkan adalah dua
@@ -70,3 +71,32 @@ oleh handler error.
 Setelah `start/lab04.js` dan `start/worker.js` diisi dengan implementasi
 referensi, run gabungan `assignments -> rebalance -> replay` selesai exit 0
 dengan tiga PASS di atas. Scaffold dikembalikan setelah verifikasi.
+
+## Run ulang 2026-11-11
+
+Perintah sama (ketiganya exit 0):
+
+```
+  c1: delta=33, partisi dilihat=[0]
+  c2: delta=33, partisi dilihat=[1]
+  c3: delta=33, partisi dilihat=[2]
+  c4: delta=0, partisi dilihat=[]
+PASS lab04 assignments: 3 consumer aktif, 1 idle, 99 pesan diproses setelah rebalance
+
+  protokol  partisi berpindah  gap maks consumer tidak terdampak
+  classic     733 ms              32 ms
+  consumer   2975 ms              36 ms
+PASS lab04 rebalance: classic moved=733 ms/unaffected=32 ms, consumer moved=2975 ms/unaffected=36 ms
+
+PASS  lag 0 sesudah replay
+PASS lab04 replay: lag 0 sebelum reset, 30 pesan diputar ulang dengan offset earliest, lag 0 sesudah
+```
+
+Default assignor broker diperiksa langsung:
+
+```
+$ kafka-configs.sh --bootstrap-server localhost:29092 --entity-type brokers --entity-name 1 --describe --all | grep group.consumer.assignors
+  group.consumer.assignors=uniform,range sensitive=false synonyms={DEFAULT_CONFIG:group.consumer.assignors=uniform,range}
+```
+
+`group.remote.assignor` hanya ada di `kafka-clients` (config client).

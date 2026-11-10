@@ -1,6 +1,6 @@
 # Evidence Lab 02
 
-Tanggal: 2026-11-08
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
 Host: macOS arm64, Docker 29.8.2, Compose 5.5.0, Node 24.22.1
 Commands (dari `labs/02-producer/`):
 
@@ -60,3 +60,27 @@ PASS lab02 durability: ditolak saat ISR < 2, berhasil setelah broker kembali, ta
 ```
 
 Exit code kedua run: 0.
+
+## Run ulang 2026-11-11
+
+Perintah sama (keduanya exit 0):
+
+```
+PASS  order-1 -> partisi 1, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-2 -> partisi 0, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-3 -> partisi 0, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-4 -> partisi 2, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-5 -> partisi 2, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-6 -> partisi 0, seq 1,2,3,4,5,6,7,8,9,10
+PASS lab02 ordering: 6 key x 10 pesan, urutan per key benar
+
+PASS  ISR partisi 1 kembali 2
+PASS  batch dikirim ulang dan diterima
+PASS  verifikasi: 5 pesan, 5 key, tanpa duplikat
+ISR partisi 1 setelah semua broker hidup: 3
+PASS lab02 durability: ditolak saat ISR < 2, berhasil setelah broker kembali, tanpa duplikat
+```
+
+Catatan: `solution/ordering.js` mencatat partisi dari pesan pertama setiap
+key saja; ia belum memeriksa bahwa semua pesan satu key berada di partisi yang
+sama.

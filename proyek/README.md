@@ -117,10 +117,29 @@ scripts/fault-broker-down.sh
 npm test
 ```
 
-Test menyalakan Kafka dan Postgres sendiri lewat Testcontainers (`confluentinc/cp-kafka:8.4.0` dan `postgres:17`), membuat topic dengan replication factor 1, lalu menjalankan alur lengkap: order `PAID`, duplikat tidak menambah baris, dan pesan rusak masuk DLT. Docker harus menyala dan image sudah pernah di-pull; bagian pertama bisa memakan 30–60 detik.
+Test menyalakan Kafka dan Postgres sendiri lewat Testcontainers (`confluentinc/cp-kafka:8.4.1` dan `postgres:17`), membuat topic dengan replication factor 1, lalu menjalankan alur lengkap: order `PAID`, duplikat tidak menambah baris, pesan rusak masuk DLT, dan (di `solution/`) order dengan `amount` di atas limit menjadi `FAILED`. Docker harus menyala dan image sudah pernah di-pull; bagian pertama bisa memakan 30–60 detik.
 
 Di `start/`, test yang sama baru lulus setelah seluruh `// LATIHAN:` diisi. Sebelum itu ia berhenti di pemeriksaan order `PAID`.
 
+### Tugas: tambah satu kasus uji
+
+Test yang ada baru menguji jalur sukses, duplikat, dan pesan rusak. Jalur `payment.failed.v1` belum diuji. Tambahkan kasus keempat di `test/integration.test.js`, di tempat bertanda `// LATIHAN 7` (setelah bagian 3, sebelum `finally`).
+
+Acuan: bagian `// --- 1. happy path` di berkas yang sama. Polanya sama, hanya hasilnya yang berbeda:
+
+1. `POST /orders` dengan `amount` 2000000 (di atas `PAYMENT_LIMIT` 1.000.000). Respons harus `202`.
+2. Tunggu `GET /orders/<orderId>` berstatus `FAILED` memakai helper `waitFor`.
+3. Tepat satu baris `proyek_payments` untuk order itu, dengan `status` `failed`.
+4. Tepat satu baris `proyek_notifications` untuk order itu, dengan `event_type` `payment.failed.v1` (konstanta `PAYMENT_FAILED`) dan `message` yang memuat `gagal`.
+
+Jalankan dari `proyek/start/` (atau folder tempat kamu bekerja):
+
+```bash
+npm test
+```
+
+Kasus baru dijalankan di dalam test yang sama, jadi Kafka dan Postgres tidak dinyalakan ulang. Hasil yang diharapkan tetap `pass 1`, `fail 0`. Untuk memastikan kasus barunya benar-benar memeriksa sesuatu, ubah sementara `'FAILED'` menjadi `'PAID'` di `waitFor`; test harus gagal dengan `timeout menunggu order FAILED` setelah 30 detik. Jawaban ada di `solution/test/integration.test.js`, bagian `// --- 4.`
+
 ## Selesai jika
 
-Keempat skenario fault berakhir dengan status order yang benar dan `npm test` lulus.
+Keempat skenario fault berakhir dengan status order yang benar, kasus uji `FAILED` sudah ditambahkan, dan `npm test` lulus.

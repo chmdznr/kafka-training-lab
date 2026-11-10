@@ -1,6 +1,6 @@
 # Evidence verify-env
 
-Tanggal: 2026-11-08
+Tanggal: 2026-11-08; dijalankan ulang 2026-11-11 (lihat bagian "Run ulang 2026-11-11")
 Host: macOS arm64, Docker 29.8.2, Compose 5.5.0, Node 24.22.1
 Command: `./scripts/verify-env.sh` (dari `lab/`)
 
@@ -42,3 +42,24 @@ Lingkungan siap dipakai untuk training.
 Catatan pemasangan: `.npmrc` memakai `ignore-scripts=true`; binary native
 dipasang oleh `npm run setup:native` (idempotent) karena endpoint download
 node-pre-gyp mengembalikan 504 pada jaringan ini.
+
+## Run ulang 2026-11-11
+
+```
+$ ./scripts/verify-env.sh        (exit 0)
+  PASS  docker compose 5.5.0
+  PASS  node v24.22.1 (sesuai .nvmrc 24)
+  PASS  npm ci
+  PASS  binary native @confluentinc/kafka-javascript terpasang
+  PASS  native @confluentinc/kafka-javascript termuat
+  PASS  image docker tersedia
+  PASS  image Testcontainers tersedia (cp-kafka, ryuk)
+  PASS  docker compose up -d
+  PASS  broker menerima koneksi
+  PASS  3 broker berjalan
+  PASS  KRaft quorum 3 voter
+  PASS  smoke PLAINTEXT dan SASL
+PASS: 13  FAIL: 0
+```
+
+Pemeriksaan image Testcontainers kini mencari `confluentinc/cp-kafka:8.4.1`.

@@ -96,8 +96,10 @@ Kolom `ASSIGNMENT-STRATEGY` menampilkan `roundrobin` untuk group classic.
 dengan strategi itu.
 
 Untuk `group.protocol=consumer` (KIP-848), `partition.assignment.strategy`
-tidak didukung. Broker yang memilih assignor lewat `group.remote.assignor`
-(default broker: `uniform`). Heartbeat dan session timeout juga diatur broker:
+tidak didukung. Assignor dijalankan di broker: daftarnya diatur config broker
+`group.consumer.assignors` (default `uniform,range`), dan group memakai yang
+pertama kecuali client meminta lain lewat config client
+`group.remote.assignor`. Heartbeat dan session timeout juga diatur broker:
 `group.consumer.heartbeat.interval.ms` (default 5000 ms) dan
 `group.consumer.session.timeout.ms` (default 45000 ms). Karena itu partisi yang
 berpindah menunggu giliran assignment/heartbeat berikutnya, sedangkan partisi

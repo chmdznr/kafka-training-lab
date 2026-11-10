@@ -92,3 +92,18 @@ tidak ada pesan yang diproses dua kali.
   dilewati; hanya kegagalan bisnis yang masuk retry/DLT.
 - `payment_events` sengaja tanpa unique constraint: duplikat masih mungkin,
   itulah yang diperbaiki di Lab 06.
+
+## Run ulang 2026-11-11
+
+NestJS `12.4.2` (`@nestjs/common`, `core`, `microservices`, `platform-express`).
+`npm ci` dan `npm run build` exit 0 di `start/` dan `solution/`.
+
+```
+POST /orders -> HTTP 202 {"orderId":"c9d181f3-...","correlationId":"demo-1"}
+payment-service: received -> committed; baris payment_events tersimpan
+SIGTERM saat memproses (PROCESSING_DELAY_MS=3000) -> exit 143
+restart: rows=9, distinct event_id=9 (tanpa duplikat)
+```
+
+Jumlah baris kumulatif karena run ini mengikuti run pertama di stack yang sama
+(run pertama: rows=5, events=5).
