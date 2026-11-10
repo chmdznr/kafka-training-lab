@@ -183,3 +183,44 @@ keempat, lalu dihapus):
 ℹ fail 1
   Error: timeout menunggu order FAILED; hasil terakhir: false
 ```
+
+## Run ulang 2026-11-11 (putaran 2)
+
+`proyek_processed_events` kini berkunci `(consumer_group, event_id)`;
+payment-service (dan retry worker) mengklaim dengan `payment-service`,
+notification-service dengan `notification-service`.
+
+```
+\d proyek_processed_events
+ consumer_group text not null | event_id uuid not null | topic text not null | processed_at timestamptz
+ "proyek_processed_events_pkey" PRIMARY KEY, btree (consumer_group, event_id)
+
+select consumer_group, count(*) ... group by 1
+ notification-service | 18
+ payment-service      |  5
+
+order cust-1 -> PAID; cust-big 2000000 -> FAILED
+fault-consumer-crash, fault-duplicate, fault-poison, fault-broker-down: semua OK, exit 0
+stop-all: exit 0
+npm test: ✔ (26115ms), pass 1, fail 0
+```
+
+Tabel versi lama (PK `event_id` saja) diuji dengan sengaja: service tetap
+menyala, order masuk, lalu payment gagal dengan
+`column "consumer_group" of relation "proyek_processed_events" does not exist`
+dan pesan masuk retry. README menjelaskan cara menghapus tabel lama. Tabel uji
+dihapus setelahnya.
+
+LATIHAN 7 dari `start/`: LATIHAN 1 sampai 6 diisi dengan implementasi
+`solution/`, LATIHAN 7 ditulis sebagai peserta mengikuti petunjuk README, lalu:
+
+```
+$ npm test            (dari proyek/start)
+order.status-applied ... "status":"FAILED"
+✔ order -> payment -> notification dengan idempotency dan DLT (25992ms)
+ℹ pass 1
+ℹ fail 0
+```
+
+`start/src` dan `start/test` dikembalikan dari salinan sebelum uji
+(`diff -r` kosong, 7 berkas masih berisi `LATIHAN`, `npm run build` exit 0).

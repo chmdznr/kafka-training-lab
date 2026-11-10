@@ -30,8 +30,8 @@ PASS lab01: leader berpindah, pesan tetap terbaca, ISR pulih, topic compacted di
 ```
 
 Broker yang dimatikan (kafka-2) dinyalakan kembali oleh skrip; ISR dan quorum
-pulih. Setelah Lab 03, `order.created.v1` berisi 2 record event kontrak
-(lihat `.evidence/clean-run.md`).
+pulih. Sejak 2026-11-11 Lab 03 menulis ke topic sandbox
+`lab03.order.created.v1`, jadi `order.created.v1` tetap kosong sampai Lab 05.
 
 ## Validasi alur start
 

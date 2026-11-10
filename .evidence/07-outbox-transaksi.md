@@ -245,3 +245,23 @@ read_committed   melihat : [committed]
 read_uncommitted melihat : [aborted, committed]
 HASIL: OK
 ```
+
+## Run ulang 2026-11-11 (putaran 2)
+
+Stack bersih, setelah Lab 01, 02, 03, 05, 06:
+
+```
+POST /orders -> HTTP 201
+pending while down: 3   pending after start: 0
+order di database      : 4
+event lab ini          : 4 (key unik: 4)
+event lain diabaikan   : 9
+outbox belum terkirim  : 0
+event tidak valid      : 0
+HASIL: OK - tidak ada order tanpa event, tidak ada event tanpa order
+payment-tx: 0 baris "lewati record yang bukan order.created.v1 valid"
+abort-demo: read_committed [committed], read_uncommitted [aborted, committed], HASIL: OK
+```
+
+`event lain diabaikan` turun dari 11-15 menjadi 9 (event Lab 05 dan 06 saja);
+contoh di README disesuaikan.

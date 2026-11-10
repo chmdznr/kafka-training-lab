@@ -5,10 +5,15 @@ import type { PaymentEventData } from '../common/events.js';
 import { PAYMENT_COMPLETED } from '../common/kafka.js';
 
 export const NOTIFICATION_SCHEMA = `
+  -- Dipakai bersama payment-service dan notification-service, jadi kunci klaim
+  -- adalah (consumer_group, event_id): satu group tidak menghalangi group lain
+  -- memproses event yang sama.
   CREATE TABLE IF NOT EXISTS proyek_processed_events (
-    event_id uuid PRIMARY KEY,
+    consumer_group text NOT NULL,
+    event_id uuid NOT NULL,
     topic text NOT NULL,
-    processed_at timestamptz NOT NULL DEFAULT now()
+    processed_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (consumer_group, event_id)
   );
 
   CREATE TABLE IF NOT EXISTS proyek_notifications (
@@ -44,8 +49,9 @@ export class NotificationService implements OnModuleInit {
         ? `Pembayaran order ${orderId} berhasil`
         : `Pembayaran order ${orderId} gagal`;
 
-    // LATIHAN 6: klaim eventId di proyek_processed_events dan tulis notifikasi
-    // dalam satu transaksi. Event pembayaran yang dikirim ulang tidak boleh
+    // LATIHAN 6: klaim (consumer_group, eventId) di proyek_processed_events
+    // dengan consumer_group NOTIFICATION_GROUP dari ../common/kafka.js, lalu
+    // tulis notifikasi dalam satu transaksi. Event pembayaran yang dikirim ulang tidak boleh
     // menghasilkan notifikasi kedua.
     await this.db.query(
       `INSERT INTO proyek_notifications (event_id, order_id, event_type, message)

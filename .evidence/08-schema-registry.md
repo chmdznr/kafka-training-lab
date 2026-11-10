@@ -156,3 +156,31 @@ consumer lama (reader schema v1) tetap membaca semua event di atas.
 
 Dari `start/`, `node scripts/check-compat.js avro/order-created-removed-field.avsc`
 menghasilkan keluaran `KOMPATIBEL` yang sama (exit 0).
+
+## Run ulang 2026-11-11 (putaran 2)
+
+Seluruh langkah 1 sampai 8 dijalankan dari `start/` di registry kosong,
+setelah peserta mengisi `scripts/register.js` dan membuat
+`avro/order-created-v2.avsc` sesuai README. Sebelum diisi:
+
+```
+$ node scripts/register.js avro/order-created-v1.avsc
+LATIHAN 1: implement client.register di scripts/register.js
+```
+
+Setelah diisi (semua keluaran sama dengan `solution/`):
+
+```
+versi 1, schema id 1 / compatibility BACKWARD / produce v1 x2
+versi 2, schema id 2 / produce v2 x2
+consume --old-reader: dibaca 4 event Avro; consume: dibaca 4 event Avro
+breaking: DITOLAK registry, TYPE_MISMATCH; versions [1,2]
+check-compat (BACKWARD): KOMPATIBEL
+set-compat FORWARD; check-compat: TIDAK KOMPATIBEL (exit 1)
+register removed-field: DITOLAK registry, READER_FIELD_MISSING_DEFAULT_VALUE (customerId)
+set-compat BACKWARD; versions [1,2]; {"compatibilityLevel":"BACKWARD"}
+consume --old-reader: dibaca 4 event Avro
+```
+
+`start/` dikembalikan ke keadaan latihan (register.js dengan LATIHAN, tanpa
+`order-created-v2.avsc`); `diff -r` dengan salinan sebelum uji kosong.

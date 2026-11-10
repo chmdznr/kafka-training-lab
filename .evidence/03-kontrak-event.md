@@ -36,7 +36,7 @@ PASS  event tanpa correlationId ditolak: Envelope tidak valid: correlationId waj
 PASS lab03 publish: envelope dipakai, event rusak ditolak consumer
 ```
 
-## `order.created.v1` hanya berisi record Lab 03
+## `order.created.v1` hanya berisi record Lab 03 (sebelum 2026-11-11)
 
 Setelah clean run Labs 01-04:
 
@@ -87,5 +87,34 @@ $ npm run envelope:check
 PASS lab03 envelope: 12 pemeriksaan
 ```
 
-Catatan: `npm run envelope:check` menjalankan
-`labs/03-kontrak-event/solution/envelope-check.js`, bukan `start/`.
+Catatan run ini: `npm run envelope:check` saat itu menjalankan `solution/`.
+Script itu dihapus di putaran 2 (lihat di bawah).
+
+## Run ulang 2026-11-11 (putaran 2)
+
+Uji publish dipindah ke topic sandbox `lab03.order.created.v1` (start dan
+solution); `eventType` tetap `order.created.v1`. Stack bersih, setelah Lab 01:
+
+```
+$ node solution/envelope-check.js
+PASS lab03 envelope: 12 pemeriksaan
+$ node solution/publish-order.js
+PASS  produce 2 record ke lab03.order.created.v1 (1 valid, 1 tanpa correlationId)
+PASS  event valid lolos validateEnvelope dan header cocok
+PASS  event tanpa correlationId ditolak: Envelope tidak valid: correlationId wajib string tidak kosong
+PASS lab03 publish: envelope dipakai, event rusak ditolak consumer
+$ node start/publish-order.js
+FAIL lab03 publish: LATIHAN: buat envelope dengan createEnvelope dan kirim event valid + event tanpa correlationId
+```
+
+Langkah 4 README (`--topic lab03.order.created.v1`): 2 record terbaca, 1 di
+antaranya memuat `correlationId`.
+
+```
+lab03.order.created.v1:0:0 lab03.order.created.v1:1:2 lab03.order.created.v1:2:0
+order.created.v1:0:0 order.created.v1:1:0 order.created.v1:2:0
+```
+
+`order.created.v1` tetap kosong setelah Lab 03. Script `envelope:check`
+dihapus dari `package.json` akar karena tidak dirujuk README, slide, atau
+CHEATSHEET; `npm run envelope:check` kini menjawab `Missing script`.

@@ -293,3 +293,14 @@ DLT: correlation-id:lab09-retry-1,traceparent:00-aaaabbbbccccddddeeeeffff0000111
 ```
 
 Bukti trace di Jaeger 2.23.0 dicatat di `00-stack.md`, bagian run ulang.
+
+## Run ulang 2026-11-11 (putaran 2)
+
+```
+traceparent 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01 sama di log
+order-service (order.created) dan payment-service (received, processed)
+lag (PROCESSING_DELAY_MS=2000): p0 8, p1 4, p2 9 -> 0, 0, 0
+sasl-check salah exit 1; benar exit 0 (sasl-check-ok)
+DLT: correlation-id:lab09-retry-1,traceparent:00-aaaabbbbccccddddeeeeffff00001111-2222333344445555-01
+invalid-event di log payment-service: 0
+```

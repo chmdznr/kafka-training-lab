@@ -171,3 +171,14 @@ replay kedua: payments tetap 1
 ```
 
 `payment_limits` dikembalikan ke 1000000 setelah uji.
+
+## Run ulang 2026-11-11 (putaran 2)
+
+```
+send-duplicate: rows for first id 8febb788-...: 1
+   1 "event":"duplicate-skipped"
+   1 "event":"processed"
+send-poison: retry-scheduled -> dead-lettered
+replay: {"event":"replay-done","replayed":1,"skipped":0,"filtered":0}; payments 1
+replay kedua: payments tetap 1
+```

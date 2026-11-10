@@ -31,7 +31,7 @@ flowchart TD
 ```
 
 - Outbox: perubahan bisnis dan event keluar ditulis dalam satu transaksi Postgres. Tidak ada dual-write.
-- Idempotent consumer: `eventId` diklaim di `processed_events` dalam transaksi yang sama dengan efeknya.
+- Idempotent consumer: pasangan `(consumer_group, event_id)` diklaim di `proyek_processed_events` dalam transaksi yang sama dengan efeknya. Tabel ini dipakai bersama payment-service dan notification-service; `consumer_group` di primary key membuat klaim satu service tidak menghalangi service lain memproses event yang sama. Retry worker memakai klaim group `payment-service`, karena ia menjalankan logika payment yang sama.
 - Retry/DLT: kegagalan dipindah ke `order.created.v1.payment-service.retry` dengan header backoff, lalu ke `...dlt` setelah 2 percobaan.
 - Notifikasi disimpan di tabel `proyek_notifications`, bukan dikirim sungguhan.
 - Semua tabel proyek memakai prefix `proyek_` supaya tidak bentrok dengan tabel lab lain di database `shop` yang sama.
@@ -59,6 +59,14 @@ npm run create-topics
 ```
 
 Topic yang dibuat: `order.created.v1`, `payment.completed.v1`, `payment.failed.v1`, retry, dan DLT (3 partisi, RF 3).
+
+Kalau proyek ini pernah dijalankan sebelum kolom `consumer_group` ditambahkan, tabel `proyek_processed_events` versi lama masih ada dan `CREATE TABLE IF NOT EXISTS` tidak mengubahnya; service tetap menyala, tetapi setiap event gagal dengan `column "consumer_group" of relation "proyek_processed_events" does not exist` lalu masuk retry dan DLT. Hapus tabel itu sekali sebelum menyalakan service:
+
+```bash
+docker compose -f ../../docker-compose.yml exec postgres psql -U app -d shop -c "drop table if exists proyek_processed_events"
+```
+
+Atau mulai dari stack kosong dengan `docker compose -f ../../docker-compose.yml down -v` lalu `up -d` (ini menghapus seluruh data lab lain juga).
 
 ## Menjalankan
 

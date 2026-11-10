@@ -1,8 +1,10 @@
 'use strict';
 
-// Lab 03 - use the envelope to publish order.created.v1, then also send an
-// intentionally broken event. The broker does not validate payloads; the
-// consumer must reject it. Run: node solution/publish-order.js
+// Lab 03 - use the envelope to publish an order.created.v1 event, then also send
+// an intentionally broken event. The broker does not validate payloads; the
+// consumer must reject it. Both go to the sandbox topic lab03.order.created.v1
+// so the broken record never reaches order.created.v1, which later labs read
+// from the beginning. Run: node solution/publish-order.js
 
 const { randomUUID } = require('node:crypto');
 const { KafkaJS } = require('@confluentinc/kafka-javascript');
@@ -10,11 +12,10 @@ const { Kafka } = KafkaJS;
 const {
   createEnvelope,
   validateEnvelope,
-  topicFor,
   headersFor,
 } = require('../../../shared/envelope.js');
 
-const TOPIC = 'order.created.v1';
+const TOPIC = 'lab03.order.created.v1';
 const BROKERS = (process.env.KAFKA_BROKERS || 'localhost:9092,localhost:9093,localhost:9094').split(',');
 
 async function ensureTopic(admin) {
@@ -69,14 +70,14 @@ async function main() {
   const producer = kafka.producer({ kafkaJS: { acks: -1, idempotent: true } });
   await producer.connect();
   await producer.send({
-    topic: topicFor(event),
+    topic: TOPIC,
     messages: [
       { key: orderId, value: JSON.stringify(event), headers: headersFor(event) },
       { key: orderId, value: JSON.stringify(broken), headers: { 'event-type': event.eventType } },
     ],
   });
   await producer.disconnect();
-  console.log(`PASS  produce 2 record ke ${topicFor(event)} (1 valid, 1 tanpa correlationId)`);
+  console.log(`PASS  produce 2 record ke ${TOPIC} (1 valid, 1 tanpa correlationId)`);
 
   const consumer = kafka.consumer({
     kafkaJS: { groupId: `lab03-publish-${randomUUID()}`, fromBeginning: true },

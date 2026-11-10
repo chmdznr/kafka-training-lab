@@ -81,6 +81,23 @@ ISR partisi 1 setelah semua broker hidup: 3
 PASS lab02 durability: ditolak saat ISR < 2, berhasil setelah broker kembali, tanpa duplikat
 ```
 
-Catatan: `solution/ordering.js` mencatat partisi dari pesan pertama setiap
-key saja; ia belum memeriksa bahwa semua pesan satu key berada di partisi yang
-sama.
+Catatan run ini: `solution/ordering.js` saat itu hanya mencatat partisi dari
+pesan pertama setiap key. Diperbaiki di putaran 2 (lihat di bawah).
+
+## Run ulang 2026-11-11 (putaran 2)
+
+`solution/ordering.js` kini menyimpan himpunan partisi per key dan FAIL bila
+satu key muncul di lebih dari satu partisi. Stack bersih (exit 0 keduanya):
+
+```
+PASS  order-1 -> partisi 1, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-2 -> partisi 0, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-3 -> partisi 0, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-4 -> partisi 2, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-5 -> partisi 2, seq 1,2,3,4,5,6,7,8,9,10
+PASS  order-6 -> partisi 0, seq 1,2,3,4,5,6,7,8,9,10
+PASS lab02 ordering: 6 key x 10 pesan, satu partisi dan urutan benar per key
+
+ISR partisi 2 setelah semua broker hidup: 3
+PASS lab02 durability: ditolak saat ISR < 2, berhasil setelah broker kembali, tanpa duplikat
+```

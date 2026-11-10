@@ -7,15 +7,21 @@ import type { OrderCreatedData, PaymentEventData } from '../common/events.js';
 import {
   PAYMENT_COMPLETED,
   PAYMENT_FAILED,
+  PAYMENT_GROUP,
 } from '../common/kafka.js';
 
 export const PAYMENT_LIMIT = 1_000_000;
 
 export const PAYMENT_SCHEMA = `
+  -- Dipakai bersama payment-service dan notification-service, jadi kunci klaim
+  -- adalah (consumer_group, event_id): satu group tidak menghalangi group lain
+  -- memproses event yang sama.
   CREATE TABLE IF NOT EXISTS proyek_processed_events (
-    event_id uuid PRIMARY KEY,
+    consumer_group text NOT NULL,
+    event_id uuid NOT NULL,
     topic text NOT NULL,
-    processed_at timestamptz NOT NULL DEFAULT now()
+    processed_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (consumer_group, event_id)
   );
 
   CREATE TABLE IF NOT EXISTS proyek_payments (
@@ -67,14 +73,16 @@ export class PaymentService implements OnModuleInit {
     const failed = amount > PAYMENT_LIMIT;
 
     return this.db.withTransaction(async (client) => {
-      // Idempotent consumer: claim the event id and write every effect in one
-      // transaction. A redelivered event stops here.
+      // Idempotent consumer: claim (group, event id) and write every effect in
+      // one transaction. A redelivered event stops here. The retry worker runs
+      // this same method and claims under PAYMENT_GROUP too, so a retried event
+      // is still processed at most once by payment.
       const claimed = await client.query(
-        `INSERT INTO proyek_processed_events (event_id, topic)
-         VALUES ($1, $2)
-         ON CONFLICT (event_id) DO NOTHING
+        `INSERT INTO proyek_processed_events (consumer_group, event_id, topic)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (consumer_group, event_id) DO NOTHING
          RETURNING event_id`,
-        [envelope.eventId, topic],
+        [PAYMENT_GROUP, envelope.eventId, topic],
       );
       if (claimed.rowCount === 0) {
         return { duplicate: true };

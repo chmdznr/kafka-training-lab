@@ -107,3 +107,17 @@ restart: rows=9, distinct event_id=9 (tanpa duplikat)
 
 Jumlah baris kumulatif karena run ini mengikuti run pertama di stack yang sama
 (run pertama: rows=5, events=5).
+
+## Run ulang 2026-11-11 (putaran 2)
+
+Stack bersih, setelah Lab 01 sampai 03:
+
+```
+POST /orders -> HTTP 202 {"orderId":"5e9da4c0-...","correlationId":"demo-1"}
+SIGTERM saat memproses -> exit 143
+restart: rows=4, distinct event_id=4 (tanpa duplikat)
+invalid-event di log payment-service: 0
+```
+
+Sebelumnya consumer mencatat satu `invalid-event` untuk event rusak Lab 03;
+sejak Lab 03 memakai topic sandbox, angka itu 0.

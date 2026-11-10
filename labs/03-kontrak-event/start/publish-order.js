@@ -7,9 +7,11 @@
 const { randomUUID } = require('node:crypto');
 const { KafkaJS } = require('@confluentinc/kafka-javascript');
 const { Kafka } = KafkaJS;
-const { createEnvelope, validateEnvelope, topicFor, headersFor } = require('../../../shared/envelope.js');
+const { createEnvelope, validateEnvelope, headersFor } = require('../../../shared/envelope.js');
 
-const TOPIC = 'order.created.v1';
+// Topic sandbox Lab 03. Event rusak tidak boleh masuk order.created.v1, karena
+// lab berikutnya membaca topic itu dari awal.
+const TOPIC = 'lab03.order.created.v1';
 const BROKERS = (process.env.KAFKA_BROKERS || 'localhost:9092,localhost:9093,localhost:9094').split(',');
 
 function latihan(message) {
@@ -21,7 +23,7 @@ async function main() {
     kafkaJS: { clientId: 'lab03-publish', brokers: BROKERS, logLevel: KafkaJS.logLevel.ERROR },
   });
 
-  // LATIHAN: buat topic order.created.v1 bila belum ada (3 partisi, RF3,
+  // LATIHAN: buat topic lab03.order.created.v1 (TOPIC) bila belum ada (3 partisi, RF3,
   // min.insync.replicas=2) memakai admin client.
 
   const orderId = `order-${randomUUID()}`;

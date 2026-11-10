@@ -76,7 +76,8 @@ tersebar merata. `Isr` berisi tiga broker.
 
 `order.created.v1` sengaja dibiarkan kosong. Consumer yang membaca topic itu
 dari awal di lab berikutnya akan memproses seluruh isinya; karena itu hanya
-event yang memenuhi kontrak (Lab 03) yang boleh ditulis ke sana.
+event yang memenuhi kontrak (dirancang di Lab 03, dikirim service mulai Lab 05)
+yang boleh ditulis ke sana.
 
 ## 3. Produce dan consume lewat CLI
 

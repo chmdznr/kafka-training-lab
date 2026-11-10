@@ -84,7 +84,8 @@ async function main() {
           if (value.runId !== runId) return;
 
           const key = message.key?.toString();
-          const state = perKey.get(key) ?? { partition, seqs: [] };
+          const state = perKey.get(key) ?? { partitions: new Set(), seqs: [] };
+          state.partitions.add(partition);
           state.seqs.push(value.seq);
           perKey.set(key, state);
           received += 1;
@@ -113,16 +114,20 @@ async function main() {
     }
     const expected = Array.from({ length: PER_KEY }, (_, i) => i + 1);
     const ordered = JSON.stringify(state.seqs) === JSON.stringify(expected);
+    // Same key, same partition: every message of this key must land in one partition.
+    const onePartition = state.partitions.size === 1;
+    const ok = ordered && onePartition;
     console.log(
-      `${ordered ? 'PASS' : 'FAIL'}  ${key} -> partisi ${state.partition}, seq ${state.seqs.join(',')}`,
+      `${ok ? 'PASS' : 'FAIL'}  ${key} -> partisi ${[...state.partitions].join(',')}, seq ${state.seqs.join(',')}`,
     );
-    if (!ordered) failed = true;
+    if (!onePartition) console.log(`FAIL  ${key} tersebar di ${state.partitions.size} partisi`);
+    if (!ok) failed = true;
   }
 
   if (failed) {
     process.exit(1);
   }
-  console.log(`PASS lab02 ordering: ${KEYS.length} key x ${PER_KEY} pesan, urutan per key benar`);
+  console.log(`PASS lab02 ordering: ${KEYS.length} key x ${PER_KEY} pesan, satu partisi dan urutan benar per key`);
 }
 
 main().catch((error) => {

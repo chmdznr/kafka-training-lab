@@ -12,10 +12,11 @@ Durasi: 40 menit.
   Perintah `docker compose` juga jalan dari sini karena Compose mencari
   `docker-compose.yml` di folder induk.
 
-Lab ini satu-satunya yang menulis ke `order.created.v1`, karena payload-nya
-mengikuti kontrak. Satu event rusak tetap dikirim dengan sengaja untuk
-membuktikan consumer menolaknya. Lab 01, 02, dan 04 memakai topic sandbox
-masing-masing.
+Event di lab ini bertipe `order.created.v1`, tetapi dikirim ke topic sandbox
+`lab03.order.created.v1`, karena satu event rusak sengaja ikut dikirim untuk
+membuktikan consumer menolaknya. Lab 05 dan seterusnya membaca
+`order.created.v1` dari awal, jadi topic itu hanya boleh berisi event yang lolos
+kontrak. Lab 01, 02, dan 04 juga memakai topic sandbox masing-masing.
 
 ## Alur latihan
 
@@ -90,8 +91,8 @@ node start/publish-order.js
 Cadangan: `node solution/publish-order.js`.
 
 Skrip ini membuat satu event valid dan satu event rusak (tanpa
-`correlationId`), mengirim keduanya ke `order.created.v1`, lalu membacanya
-kembali. Event valid lolos `validateEnvelope`; event rusak ditolak consumer.
+`correlationId`), mengirim keduanya ke topic sandbox `lab03.order.created.v1`
+(dibuat otomatis bila belum ada), lalu membacanya kembali. Event valid lolos `validateEnvelope`; event rusak ditolak consumer.
 
 ## 4. Fault injection: broker tidak memvalidasi payload
 
@@ -99,7 +100,7 @@ Kafka hanya menyimpan bytes. Buktikan bahwa record rusak tetap masuk ke topic:
 
 ```bash
 docker compose exec -T kafka-1 /opt/kafka/bin/kafka-console-consumer.sh \
-  --bootstrap-server kafka-1:29092 --topic order.created.v1 \
+  --bootstrap-server kafka-1:29092 --topic lab03.order.created.v1 \
   --from-beginning --timeout-ms 10000 \
   --formatter-property print.key=true | grep -c correlationId
 ```

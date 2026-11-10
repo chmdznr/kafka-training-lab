@@ -9,7 +9,6 @@
   "scripts": {
     "smoke": "node scripts/smoke.js",
     "smoke:sasl": "node scripts/smoke.js --sasl-only",
-    "envelope:check": "node labs/03-kontrak-event/solution/envelope-check.js",
     "setup:native": "node scripts/ensure-native.js"
   },
   "dependencies": {

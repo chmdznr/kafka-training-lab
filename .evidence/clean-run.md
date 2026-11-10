@@ -51,7 +51,7 @@ Topic: order.created.v1  PartitionCount: 3  ReplicationFactor: 3
   Partition: 2  Leader: 1  Replicas: 1,2,3  Isr: 1,2,3
 ```
 
-## Isi `order.created.v1`
+## Isi `order.created.v1` (sebelum 2026-11-11)
 
 Consumer dari awal hanya menemukan 2 record, keduanya dari Lab 03:
 
@@ -82,4 +82,24 @@ Lab 04 assignments.js, rebalance.js, replay.js -> exit 0
 Dilanjutkan Lab 05, 06, 07, 08, 09, Jaeger (profile tracing), proyek, dan demo
 Debezium di stack yang sama; hasil per lab ada di bagian "Run ulang
 2026-11-11" masing-masing berkas. Stack diturunkan dengan
+`docker compose --profile demo --profile tracing down -v`.
+
+## Run ulang 2026-11-11 (putaran 2)
+
+Stack bersih (tidak ada container atau volume lab), urutan:
+
+```
+docker compose up -d --wait
+Lab 01 solution/lab01.sh (penyiapan)            -> exit 0
+Lab 02 ordering.js, durability.js               -> exit 0
+Lab 03 envelope-check.js, publish-order.js      -> exit 0
+Lab 05, 06, 07                                  -> exit 0
+Lab 08 dari start/ (langkah 1 sampai 8)         -> sesuai README
+Lab 09                                          -> exit 0
+Proyek solution: 4 fault script + npm test      -> exit 0
+Proyek start/ dengan LATIHAN 7: npm test        -> exit 0
+```
+
+Setelah Lab 03, `order.created.v1` berisi 0 record; record uji Lab 03 ada di
+`lab03.order.created.v1`. Stack diturunkan dengan
 `docker compose --profile demo --profile tracing down -v`.

@@ -9,7 +9,7 @@ Dijalankan dari salinan bersih repo (`rsync` tanpa `node_modules`, `dist`, `.git
 | Lab 02 `ordering.js`, `durability.js` | PASS: 6 key x 10 pesan urut per key; ditolak `code=19` saat ISR < 2, kirim ulang tanpa duplikat |
 | Lab 03 `envelope-check.js`, `publish-order.js` | PASS: 12 pemeriksaan; event tanpa `correlationId` ditolak |
 | Lab 04 `assignments.js`, `rebalance.js`, `replay.js` | PASS: 3 aktif + 1 idle; classic moved=743 ms / unaffected=31 ms, consumer moved=2970 ms / unaffected=37 ms; lag 0 setelah replay |
-| Lab 05 SIGTERM (`PROCESSING_DELAY_MS=3000`) | exit 143; `payment_events` 3/3 lalu 4/4 setelah restart (rows = distinct event_id); lag 0; hanya 1 `invalid-event` (event rusak Lab 03 yang disengaja) |
+| Lab 05 SIGTERM (`PROCESSING_DELAY_MS=3000`) | exit 143; `payment_events` 3/3 lalu 4/4 setelah restart (rows = distinct event_id); lag 0; hanya 1 `invalid-event` (event rusak Lab 03 yang disengaja; sejak 2026-11-11 menjadi 0 karena Lab 03 memakai topic sandbox) |
 | Lab 06 duplikat, poison, replay | `processed` 1 + `duplicate-skipped` 1; poison `dead-lettered` dengan header `original-topic:order.created.v1`; replay 1x dan 2x tetap 1 baris |
 | Lab 07 outbox saat 3 broker mati | 3 baris pending saat mati, 0 dalam 7 detik setelah hidup; `npm run check` HASIL OK |
 | Lab 07 payment-tx, abort-demo | LAG payment-tx 0 di 3 partisi; `read_committed [committed]`, `read_uncommitted [aborted, committed]` |
@@ -43,3 +43,16 @@ Temuan yang diperbaiki selama audit:
 | Jaeger 2.23.0 | UI 200, OTLP 200, `/api/v3/services` 200; trace Lab 09 `4bf92f35...` tampil di UI |
 | Proyek | 4 fault script OK; `npm test` 1 pass (kasus `FAILED` baru ikut diuji) |
 | Demo Debezium | connector RUNNING; offset 57 -> 57 saat paused -> 59 setelah resume; slot terhapus |
+
+## Run ulang 2026-11-11 (putaran 2)
+
+| Langkah | Hasil |
+|---|---|
+| Lab 02 | partisi per key diperiksa; 6 key, masing-masing satu partisi, seq 1-10 |
+| Lab 03 | publish ke `lab03.order.created.v1`; `order.created.v1` 0 record setelahnya; `envelope:check` dihapus |
+| Lab 05 | HTTP 202, SIGTERM exit 143, tanpa duplikat, 0 `invalid-event` |
+| Lab 06 | dedup 1 baris; poison ke DLT; replay 2x tetap 1 baris |
+| Lab 07 | `event lain diabaikan` 9; HASIL OK; abort-demo OK |
+| Lab 08 dari `start/` | langkah 1-8 sesuai README; `start/` dikembalikan |
+| Lab 09 | traceparent sama di order dan payment; lag 0; SASL benar/salah sesuai |
+| Proyek | PK `(consumer_group, event_id)`; 4 fault OK; `npm test` pass 1; LATIHAN 7 dari `start/` pass 1 |

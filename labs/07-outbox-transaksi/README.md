@@ -155,7 +155,7 @@ Keluaran yang diharapkan:
 ```text
 order di database      : 4
 event lab ini          : 4 (key unik: 4)
-event lain diabaikan   : 11   (event dari lab lain; jumlahnya bervariasi)
+event lain diabaikan   : 9    (event dari Lab 05 dan 06; jumlahnya bervariasi)
 outbox belum terkirim  : 0
 ...
 HASIL: OK - tidak ada order tanpa event, tidak ada event tanpa order
