@@ -1,5 +1,7 @@
 # Mini-proyek: order, payment, notification
 
+> **Latihan mandiri, opsional.** Proyek ini tidak dikerjakan di kelas dan bukan kewajiban. Di kelas (sesi 12), trainer mendemokan `solution/`. Kerjakan `start/` setelah training kalau ingin berlatih sendiri.
+
 **Tujuan.** Merangkai tiga service NestJS menjadi satu alur yang tahan kegagalan: order diterima lewat HTTP, event-nya keluar lewat outbox, pembayaran idempotent dengan retry dan DLT, dan notifikasi disimpan di Postgres. Semua skenario fault injection harus berakhir dengan status order yang benar.
 
 **Waktu:** 75 menit.
