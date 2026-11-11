@@ -9,6 +9,10 @@ LAB_ROOT="$(cd "$ROOT/../.." && pwd)"
 COMPOSE_FILE="$LAB_ROOT/docker-compose.yml"
 COMPOSE=(docker compose -f "$COMPOSE_FILE")
 
+# Git Bash on Windows rewrites arguments like /opt/kafka/bin/... into Windows
+# paths before docker sees them. Harmless everywhere else.
+export MSYS_NO_PATHCONV=1
+
 ORDER_URL="http://localhost:3000"
 PAYMENT_URL="http://localhost:3001"
 NOTIFICATION_URL="http://localhost:3002"

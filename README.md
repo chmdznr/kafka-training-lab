@@ -27,6 +27,13 @@ berisi `ignore-scripts=true`). `npm run setup:native` memasang binary native
 Perintah ini aman dijalankan berulang; kalau binary sudah ada, tidak ada yang
 diunduh.
 
+Di Windows, jalankan semua perintah dari Git Bash atau terminal WSL2. Kalau
+memakai Git Bash, jalankan `export MSYS_NO_PATHCONV=1` sekali di setiap
+terminal baru. Tanpa itu Git Bash mengubah argumen seperti
+`/opt/kafka/bin/kafka-topics.sh` menjadi path Windows, dan perintah
+`docker compose exec` di README lab gagal. Skrip `.sh` di repo ini sudah
+mengaturnya sendiri.
+
 Tunggu sampai ketiga broker sehat (`docker compose ps`). Setelah itu cek stack:
 
 ```bash

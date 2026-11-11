@@ -4,6 +4,10 @@
 # trainer.
 set -uo pipefail
 
+# Git Bash on Windows rewrites arguments like /opt/kafka/bin/... into Windows
+# paths before docker sees them. Harmless everywhere else.
+export MSYS_NO_PATHCONV=1
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR" || { echo "FAIL: tidak bisa masuk $ROOT_DIR"; exit 1; }
 

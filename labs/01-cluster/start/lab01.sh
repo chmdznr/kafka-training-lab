@@ -2,6 +2,10 @@
 # Lab 01 — titik awal. Lengkapi bagian LATIHAN, lalu jalankan skrip ini.
 set -euo pipefail
 
+# Git Bash on Windows rewrites arguments like /opt/kafka/bin/... into Windows
+# paths before docker sees them. Harmless everywhere else.
+export MSYS_NO_PATHCONV=1
+
 LAB_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$LAB_ROOT"
 

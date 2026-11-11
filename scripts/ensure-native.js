@@ -62,7 +62,7 @@ async function main() {
   if (!fs.existsSync(path.join(PKG_DIR, 'package.json'))) {
     throw new Error('paket belum terpasang; jalankan npm ci lebih dulu');
   }
-  if (!['darwin', 'linux'].includes(process.platform)) {
+  if (!['darwin', 'linux', 'win32'].includes(process.platform)) {
     throw new Error(`platform ${process.platform} belum didukung prebuilt; build dari source`);
   }
 
@@ -96,13 +96,17 @@ async function main() {
   fs.writeFileSync(tempFile, archive);
   try {
     fs.mkdirSync(path.join(PKG_DIR, 'build'), { recursive: true });
-    execFileSync('tar', [
-      '-xzf',
-      tempFile,
-      '-C',
-      path.join(PKG_DIR, 'build'),
-      'Release/confluent-kafka-javascript.node',
-    ]);
+    const buildDir = path.join(PKG_DIR, 'build');
+    if (process.platform === 'win32') {
+      // The Windows archive ships the DLLs the addon loads (librdkafka,
+      // OpenSSL, ...) next to it, so take all of Release/ except build
+      // leftovers. Use the tar that comes with Windows: the GNU tar on a
+      // Git Bash PATH reads "C:\..." as a remote host.
+      const systemTar = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
+      execFileSync(systemTar, ['-xzf', tempFile, '-C', buildDir, '--exclude', 'Release/obj']);
+    } else {
+      execFileSync('tar', ['-xzf', tempFile, '-C', buildDir, 'Release/confluent-kafka-javascript.node']);
+    }
   } finally {
     fs.rmSync(tempFile, { force: true });
   }
