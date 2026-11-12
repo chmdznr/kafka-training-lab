@@ -3,7 +3,7 @@
 Demo instruktur, bukan lab peserta. Durasi sekitar 10 menit.
 
 Tujuannya memperlihatkan alternatif polling di Lab 07: Debezium membaca WAL
-Postgres dan menerbitkan baris tabel `outbox` tanpa poller dari aplikasi.
+Postgres dan mem-publish baris tabel `outbox` tanpa poller dari aplikasi.
 
 Prasyarat:
 
@@ -36,7 +36,7 @@ npm run setup
 ```
 
 Jalankan order-service **tanpa** publisher. Poller tidak dipakai pada demo ini;
-Debezium yang akan menerbitkan event. Menjalankan keduanya sekaligus membuat
+Debezium yang akan mem-publish event. Menjalankan keduanya sekaligus membuat
 event ganda.
 
 ```bash
@@ -90,7 +90,7 @@ curl -s -X POST http://localhost:3007/orders \
   -d '{"customerId":"demo-cdc","item":"kopi","amount":25000}'
 ```
 
-Debezium membaca insert ke `outbox` dari WAL, lalu EventRouter SMT menerbitkan
+Debezium membaca insert ke `outbox` dari WAL, lalu EventRouter SMT mem-publish event
 ke `order.created.v1` dengan key `aggregateid` (orderId). Biasanya kurang dari
 satu detik.
 
@@ -115,7 +115,7 @@ __debezium.context... ,id=<eventId>,event-type=order.created.v1 | <orderId> | {"
 
 Header `id` berasal dari kolom `outbox.id`, yang oleh order-service diisi
 `eventId` dari envelope. Jadi `<eventId>` di header dan di payload adalah UUID
-yang sama; konsumen bisa dedup memakai salah satunya. Header `event-type`
+yang sama; consumer bisa dedup memakai salah satunya. Header `event-type`
 berasal dari kolom `type` lewat `table.fields.additional.placement`. Connect
 juga menambahkan beberapa header `__debezium.context.*`. Urutan field JSON tidak
 penting.
@@ -126,11 +126,11 @@ aplikasi tidak pernah menyentuh Kafka; hanya Postgres yang berubah.
 ## 5. Pause lalu resume connector
 
 Saat connector di-pause, task berhenti membaca WAL. Baris outbox yang masuk
-tetap tertahan di Postgres dan tidak ada event yang terbit; setelah resume,
+tetap tertahan di Postgres dan tidak ada event yang di-publish; setelah resume,
 Debezium melanjutkan dari posisi terakhir di replication slot, jadi tidak ada
 event yang hilang.
 
-Catat posisi topik sebelum pause:
+Catat posisi topic sebelum pause:
 
 ```bash
 # dari akar repo lab/
@@ -170,7 +170,7 @@ docker compose exec kafka-1 /opt/kafka/bin/kafka-get-offsets.sh \
   --bootstrap-server localhost:29092 --topic order.created.v1
 ```
 
-Kalau ada proses lain yang menulis ke topik yang sama (misalnya peserta lain
+Kalau ada proses lain yang menulis ke topic yang sama (misalnya peserta lain
 sedang menjalankan lab), offset total bisa berubah walau connector paused.
 Bukti yang menentukan adalah dua `orderId` di atas tidak muncul saat paused dan
 muncul setelah resume.
@@ -182,7 +182,7 @@ curl -s -X PUT http://localhost:8083/connectors/order-outbox-connector/resume
 ```
 
 Respons `202 Accepted`. Tunggu 2–5 detik, lalu cek offset dan event. Offset
-harus bertambah, dan dua `orderId` yang dibuat saat paused muncul di topik:
+harus bertambah, dan dua `orderId` yang dibuat saat paused muncul di topic:
 
 ```bash
 docker compose exec kafka-1 /opt/kafka/bin/kafka-get-offsets.sh \
@@ -214,24 +214,24 @@ docker compose exec postgres psql -U app -d shop \
   -c "select slot_name, active from pg_replication_slots;"
 ```
 
-Connector menyimpan konfigurasinya di topik internal Connect. Kalau ingin
+Connector menyimpan konfigurasinya di topic internal Connect. Kalau ingin
 mengulang dari nol (termasuk lupa posisi WAL), hapus connector lalu daftarkan
-ulang; `snapshot.mode=no_data` berarti hanya perubahan baru yang diterbitkan.
+ulang; `snapshot.mode=no_data` berarti hanya perubahan baru yang di-publish.
 
 ## Catatan
 
 - Demo memakai `snapshot.mode=no_data`, jadi baris outbox yang sudah ada
-  sebelum connector didaftarkan tidak ikut dipancarkan. Hanya INSERT baru yang
+  sebelum connector didaftarkan tidak ikut di-publish. Hanya INSERT baru yang
   terlihat, sesuai alur demo.
-- `topic.prefix` hanya dipakai untuk topik internal Debezium; EventRouter
-  mengganti nama topik keluaran menjadi `order.created.v1`.
+- `topic.prefix` hanya dipakai untuk topic internal Debezium; EventRouter
+  mengganti nama topic keluaran menjadi `order.created.v1`.
 - Jangan menjalankan `npm run publisher` dan Debezium bersamaan. Keduanya
-  menerbitkan baris outbox yang sama, dan itu menghasilkan event ganda
-  (konsumen idempotent yang menanganinya, tetapi membingungkan saat demo).
+  mem-publish baris outbox yang sama, dan itu menghasilkan event ganda
+  (idempotent consumer yang menanganinya, tetapi membingungkan saat demo).
 - Debezium tidak meng-update `outbox.published_at`; ia hanya membaca WAL. Baris
   yang dibuat saat demo tetap `pending` di tabel. Kalau setelah demo Lab 07
-  dijalankan lagi, poller akan menerbitkan baris itu sekali lagi (duplikat,
-  bukan kehilangan data). Untuk mulai bersih, kosongkan tabel dan topik Lab 07
+  dijalankan lagi, poller akan mem-publish baris itu sekali lagi (duplikat,
+  bukan kehilangan data). Untuk mulai bersih, kosongkan tabel dan topic Lab 07
   dengan `npm run reset -- --topics` sebelum kembali ke lab.
 - Debezium adalah demo konsep CDC. Peserta tidak menjalankan Connect di laptop
   masing-masing.

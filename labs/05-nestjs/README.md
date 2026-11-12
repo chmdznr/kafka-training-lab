@@ -1,6 +1,6 @@
 # Lab 05: NestJS + Kafka
 
-**Tujuan.** Membuat dua service NestJS: `order-service` menerima HTTP dan menerbitkan `order.created.v1`, `payment-service` mengonsumsi topic itu dengan commit manual. Di akhir lab, peserta bisa mematikan consumer dengan SIGTERM di tengah proses dan menjelaskan pesan mana yang diproses ulang.
+**Tujuan.** Membuat dua service NestJS: `order-service` menerima HTTP dan mem-publish `order.created.v1`, `payment-service` mengonsumsi topic itu dengan commit manual. Di akhir lab, peserta bisa mematikan consumer dengan SIGTERM di tengah proses dan menjelaskan pesan mana yang diproses ulang.
 
 **Waktu:** 65 menit.
 
@@ -144,7 +144,7 @@ Yang harus terlihat:
     --bootstrap-server localhost:29092 --describe --group payment-service
   ```
 
-### 5. Suntik kegagalan: SIGTERM saat memproses
+### 5. Fault injection: SIGTERM saat memproses
 
 Hentikan payment-service, lalu jalankan lagi dengan handler yang lambat (3 detik per pesan):
 

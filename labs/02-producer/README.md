@@ -1,8 +1,8 @@
-# Lab 02 — Producer, key ordering, dan jaminan tulis
+# Lab 02 — Producer, key ordering, dan durability
 
 Tujuan: membuktikan bahwa key menentukan partisi (dan urutan), lalu melihat
-sendiri bagaimana `acks=all` dan `min.insync.replicas=2` menolak tulisan saat
-terlalu sedikit replica yang hidup.
+sendiri bagaimana `acks=all` dan `min.insync.replicas=2` membuat produce ditolak
+saat terlalu sedikit replica yang hidup.
 
 Durasi: 35 menit.
 
@@ -59,7 +59,7 @@ Yang perlu terlihat:
   urutan per key.
 
 Producer memakai `acks=-1` (semua ISR) dan idempotent producer. Keduanya
-penting untuk jaminan tulis.
+penting untuk durability.
 
 ## 2. Fault injection: ISR di bawah min.insync.replicas
 
@@ -90,7 +90,7 @@ Di compose ini setiap node menjalankan `broker,controller`. Mematikan dua dari
 tiga node juga menghilangkan mayoritas quorum controller (2 dari 3). Selama
 mayoritas hilang, metadata cluster tidak bisa berubah dan leader election tidak
 bisa terjadi sampai satu node kembali. Broker yang tersisa tetap bisa menolak
-tulisan karena ISR partisinya di bawah `min.insync.replicas`, dan itulah error
+produce karena ISR partisinya di bawah `min.insync.replicas`, dan itulah error
 yang ditangkap lab ini. Setelah satu broker kembali, quorum 2 dari 3 pulih dan
 pengiriman bisa dilanjutkan; setelah broker kedua kembali, ISR pulih ke 3.
 Skrip menyalakan kembali semua broker di akhir, termasuk pada jalur error.

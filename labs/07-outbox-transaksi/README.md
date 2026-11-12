@@ -6,7 +6,7 @@ bagaimana menghindari dual-write?
 Tujuan:
 
 1. Menyimpan order dan baris outbox dalam satu transaksi Postgres.
-2. Menerbitkan event dari tabel outbox dengan poller `FOR UPDATE SKIP LOCKED`.
+2. Mem-publish event dari tabel outbox dengan poller `FOR UPDATE SKIP LOCKED`.
 3. Membuktikan tidak ada order tanpa event dan tidak ada event tanpa order
    setelah Kafka dimatikan lalu dinyalakan.
 4. Memakai transaksi Kafka untuk read-process-write: `order.created.v1` dibaca,
@@ -29,9 +29,9 @@ Tujuan:
   memakai `lab/node_modules`; tidak perlu `npm ci` di folder lab. Jangan
   menjalankan `npm install` di folder lab: `package.json` di sana hanya berisi
   script, dan `node_modules` lokal akan menutupi dependency root.
-- Topik `order.created.v1` dan `payment.completed.v1` (3 partisi, RF3,
+- Topic `order.created.v1` dan `payment.completed.v1` (3 partisi, RF3,
   `min.insync.replicas=2`) dibuat oleh langkah pertama di bawah. Cluster memakai
-  `auto.create.topics.enable=false`, jadi topik tidak muncul otomatis.
+  `auto.create.topics.enable=false`, jadi topic tidak muncul otomatis.
 
 Dua lokasi kerja dipakai di lab ini:
 
@@ -42,7 +42,7 @@ Dua lokasi kerja dipakai di lab ini:
 
 ## Bagian A — Outbox
 
-### 1. Siapkan database dan topik
+### 1. Siapkan database dan topic
 
 ```bash
 cd labs/07-outbox-transaksi/solution
@@ -161,8 +161,8 @@ outbox belum terkirim  : 0
 HASIL: OK - tidak ada order tanpa event, tidak ada event tanpa order
 ```
 
-Skrip `check` membaca seluruh topik dari awal, membandingkan key event dengan
-tabel `orders`, dan memastikan tidak ada baris outbox yang tertinggal. Topik
+Skrip `check` membaca seluruh topic dari awal, membandingkan key event dengan
+tabel `orders`, dan memastikan tidak ada baris outbox yang tertinggal. Topic
 `order.created.v1` juga dipakai lab lain, jadi order-service menandai event
 dengan `correlationId` berawalan `lab07-`; `check` hanya menghitung event
 bertanda itu dan mengabaikan sisanya. Jumlah `order di database` bisa lebih
@@ -175,8 +175,8 @@ npm run reset -- --topics
 
 Perintah itu mengosongkan tabel `orders` dan `outbox`, lalu menghapus dan
 membuat ulang `order.created.v1` dan `payment.completed.v1`. Ini destruktif
-untuk kedua topik tersebut; jangan jalankan saat lab lain sedang memakainya.
-Tanpa `--topics`, tabel tetap dikosongkan tetapi event lama masih ada di topik,
+untuk kedua topic tersebut; jangan jalankan saat lab lain sedang memakainya.
+Tanpa `--topics`, tabel tetap dikosongkan tetapi event lama masih ada di topic,
 sehingga `check` akan menganggapnya event tanpa order. Karena itu untuk mulai
 dari nol selalu pakai `--topics`.
 
@@ -232,8 +232,8 @@ cd labs/07-outbox-transaksi/solution
 npm run abort-demo
 ```
 
-Skrip menulis dua transaksi ke topik `tx-demo.v1`: satu di-abort, satu
-di-commit. Lalu dua consumer membaca topik yang sama dengan isolation berbeda.
+Skrip menulis dua transaksi ke topic `tx-demo.v1`: satu di-abort, satu
+di-commit. Lalu dua consumer membaca topic yang sama dengan isolation berbeda.
 
 ```text
 read_committed   melihat : [committed]
@@ -249,7 +249,7 @@ consumer produksi memakai `read_committed` ketika producer memakai transaksi.
 
 - Kolom `outbox.id` memakai `eventId` dari envelope, bukan UUID baru. Dengan
   begitu event yang sama punya satu id di database, di payload, dan (untuk demo
-  Debezium) di header Kafka `id`. Konsumen bisa memakai salah satunya untuk
+  Debezium) di header Kafka `id`. Consumer bisa memakai salah satunya untuk
   dedup.
 - Outbox memberi at-least-once, bukan exactly-once. Kalau proses mati setelah
   `producer.send` sukses tetapi sebelum `COMMIT` database, baris yang sama akan
@@ -260,9 +260,9 @@ consumer produksi memakai `read_committed` ketika producer memakai transaksi.
   gagal setelah `message.timeout.ms` (5 detik), transaksi database di-rollback,
   dan baris outbox dicoba lagi pada loop berikutnya. Tidak ada baris yang
   ditandai terkirim sebelum Kafka menerimanya.
-- Alternatif polling adalah CDC: Debezium membaca WAL Postgres dan menerbitkan
+- Alternatif polling adalah CDC: Debezium membaca WAL Postgres dan mem-publish
   baris outbox. Demo instruktur ada di `lab/demo/debezium/`.
-- Transaksi Kafka hanya berlaku untuk topik di cluster yang sama. Menulis ke
+- Transaksi Kafka hanya berlaku untuk topic di cluster yang sama. Menulis ke
   Postgres di dalam transaksi Kafka bukan transaksi dua fase; itulah sebabnya
   Lab 06 memakai idempotent consumer, dan lab ini memakai outbox untuk arah
   database → Kafka.

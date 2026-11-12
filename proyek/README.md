@@ -103,7 +103,7 @@ Status order berubah `PENDING` → `PAID` setelah payment selesai. `amount` di a
 
 Jalankan `scripts/start-all.sh` lebih dulu. Setiap script mencetak `OK` atau `FAIL` dan berhenti dengan exit code bukan nol kalau ada yang salah.
 
-| Script | Yang disuntikkan | Hasil yang harus terlihat |
+| Script | Yang di-inject | Hasil yang harus terlihat |
 |---|---|---|
 | `scripts/fault-consumer-crash.sh` | `kill -9` payment saat memproses pesan | Order tetap `PAID`, satu baris `proyek_payments`, satu `proyek_notifications` |
 | `scripts/fault-duplicate.sh` | Event yang sama dikirim dua kali | Satu baris `proyek_payments`, satu `proyek_notifications` |

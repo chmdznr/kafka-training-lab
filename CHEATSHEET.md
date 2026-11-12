@@ -8,7 +8,7 @@ Kafka 4.4 · `@confluentinc/kafka-javascript` 1.11 (API kompatibel KafkaJS) · N
 |---|---|---|
 | partisi | 3 (atau sesuai throughput terukur) | Batas consumer aktif per group |
 | replication factor | 3 | Tahan 1 broker mati |
-| `min.insync.replicas` | 2 | Tulis ditolak kalau ISR < 2 |
+| `min.insync.replicas` | 2 | Produce ditolak broker kalau ISR < 2 |
 | `cleanup.policy` | `delete` (event), `compact` (state terkini per key) | |
 | `retention.ms` | default 7 hari | Batas replay |
 | `auto.create.topics.enable` | `false` di broker | Buat topic eksplisit |
@@ -76,13 +76,13 @@ await app.startAllMicroservices();
 
 | Masalah | Pola |
 |---|---|
-| Event datang dua kali | `INSERT INTO processed_events (event_id) ... ON CONFLICT DO NOTHING` dalam transaksi yang sama dengan efek bisnis, lalu commit offset |
+| Event datang dua kali | `INSERT INTO processed_events (event_id) ... ON CONFLICT DO NOTHING` dalam transaksi yang sama dengan efek ke database, lalu commit offset |
 | Gagal sementara | Retry topic dengan header `retry-count`, `next-retry-at`, maksimal N kali |
 | Gagal permanen | DLT dengan header `error-message`, `original-topic`, `original-partition`, `original-offset`; perbaiki penyebab, lalu replay |
 | DB dan Kafka harus berubah bersama | Outbox: baris bisnis + baris outbox dalam satu transaksi DB, publisher `FOR UPDATE SKIP LOCKED` |
 | Kafka ke Kafka atomik | Transaksi Kafka (`sendOffsets`), consumer `read_committed` |
 
-Urutan aman di handler: validasi envelope, klaim `eventId`, efek bisnis, **COMMIT DB**, baru commit offset.
+Urutan aman di handler: validasi envelope, klaim `eventId`, tulis efek ke database, **COMMIT DB**, baru commit offset.
 
 ## Envelope dan header
 

@@ -80,7 +80,7 @@ dengan pesan yang menyebut field bermasalah. Kasus minimum yang wajib:
 - `data` yang bukan object
 
 
-## 3. Terbitkan event dengan envelope
+## 3. Publish event dengan envelope
 
 Setelah `start/publish-order.js` diisi, jalankan:
 

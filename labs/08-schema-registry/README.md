@@ -35,7 +35,7 @@ Tujuan:
   Node di folder lab memakai `lab/node_modules`; tidak perlu `npm ci` di folder
   lab. Jangan menjalankan `npm install` di folder lab: `package.json` di sana
   hanya berisi script, dan `node_modules` lokal akan menutupi dependency root.
-- Topik `lab08.order.created.v1` (dibuat otomatis oleh `scripts/produce.js` bila
+- Topic `lab08.order.created.v1` (dibuat otomatis oleh `scripts/produce.js` bila
   belum ada, 3 partisi, RF3, `min.insync.replicas=2`).
 
 Semua perintah Node di bawah dijalankan dari
@@ -122,7 +122,7 @@ Registry menerima karena field baru punya default dan tipenya cocok.
 node scripts/produce.js --version 2 --count 2
 ```
 
-Sekarang topik berisi event yang ditulis dengan schema id 1 dan id 2.
+Sekarang topic berisi event yang ditulis dengan schema id 1 dan id 2.
 
 ## 6. Consumer lama membaca event baru
 
@@ -144,7 +144,7 @@ consumer lama (reader schema v1) tetap membaca semua event di atas.
 ```
 
 Jumlahnya bisa lebih besar kalau lab ini sudah pernah dijalankan sebelumnya,
-karena consumer membaca topik dari awal.
+karena consumer membaca topic dari awal.
 
 Consumer biasa memakai writer schema dari registry, jadi ia melihat `channel`
 pada event v2:
@@ -153,7 +153,7 @@ pada event v2:
 node scripts/consume.js
 ```
 
-Topik sandbox ini hanya berisi event Avro dari lab ini. Skrip consumer tetap
+Topic sandbox ini hanya berisi event Avro dari lab ini. Skrip consumer tetap
 melewati record yang bukan Avro Schema Registry sebagai pengaman, dan mencetak
 jumlah yang dilewati di akhir.
 

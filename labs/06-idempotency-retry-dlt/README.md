@@ -23,7 +23,7 @@ flowchart TD
   worker -- "gagal 2x" --> dlt[("order.created.v1.payment-service.dlt")]
 ```
 
-Retry worker adalah proses terpisah dengan consumer group sendiri. Backoff dijalankan dengan `await sleep(...)` di worker itu, jadi pesan yang sedang menunggu tidak menahan consumer utama.
+Retry worker adalah proses terpisah dengan consumer group sendiri. Backoff dijalankan dengan `await sleep(...)` di worker itu, jadi pesan yang sedang menunggu tidak memblokir consumer utama.
 
 ## Prasyarat
 
@@ -136,7 +136,7 @@ cd labs/06-idempotency-retry-dlt/solution
 npm run replay
 ```
 
-Script memakai consumer group baru setiap kali, membaca DLT dari awal, membuang header retry, dan menerbitkan ulang ke `original-topic` dengan `eventId` yang sama. Kalau DLT juga berisi insiden lain, filter ke satu event:
+Script memakai consumer group baru setiap kali, membaca DLT dari awal, membuang header retry, dan mem-publish ulang ke `original-topic` dengan `eventId` yang sama. Kalau DLT juga berisi insiden lain, filter ke satu event:
 
 ```bash
 npm run replay -- --event-id <eventId>
@@ -163,4 +163,4 @@ Kalau proses mati setelah publish retry tetapi sebelum commit, pesan asli dikiri
 
 ## Selesai jika
 
-Pesan duplikat hanya menghasilkan satu baris pembayaran, pesan yang tidak bisa diproses berakhir di DLT, dan replay setelah perbaikan memproses pesan itu tepat sekali (replay kedua tidak menambah baris).
+Pesan duplikat hanya menghasilkan satu baris pembayaran, pesan yang tidak bisa diproses berakhir di DLT, dan replay setelah perbaikan memproses pesan itu sekali saja (replay kedua tidak menambah baris).
