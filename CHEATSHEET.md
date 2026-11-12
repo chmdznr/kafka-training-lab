@@ -38,7 +38,7 @@ const consumer = kafka.consumer({
 });
 await consumer.subscribe({ topics: ['order.created.v1'] });
 await consumer.run({ eachMessage: async ({ topic, partition, message }) => {
-  await prosesDanSimpanKeDb(message);           // efek samping dulu
+  await prosesDanSimpanKeDb(message);           // side effect dulu
   await consumer.commitOffsets([{ topic, partition,
     offset: (BigInt(message.offset) + 1n).toString() }]);
 }});

@@ -218,7 +218,7 @@ docker compose exec kafka-1 /opt/kafka/bin/kafka-consumer-groups.sh \
 ```
 
 `payment.completed.v1` berisi `causationId` yang menunjuk `eventId` order asal.
-Kolom `LAG` untuk grup `payment-tx` harus bernilai `0` pada partisi yang punya
+Kolom `LAG` untuk group `payment-tx` harus bernilai `0` pada partisi yang punya
 record; partisi yang belum pernah menerima record bisa menampilkan `-`. Record
 yang bukan `order.created.v1` valid (misalnya data uji) dilewati dengan log
 peringatan, tetapi offset-nya tetap di-commit lewat `sendOffsets` dalam
