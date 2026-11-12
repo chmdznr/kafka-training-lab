@@ -166,5 +166,5 @@ Contoh:
 3. Consumer harus memvalidasi envelope sebelum memproses `data`. Event yang
    tidak valid tidak boleh diproses; kirim ke DLT atau log sebagai poison
    message.
-4. `causationId` diisi oleh consumer saat menerbitkan event turunan, memakai
+4. `causationId` diisi oleh consumer saat mem-publish event turunan, memakai
    `eventId` event yang sedang diproses. Dengan begitu alur bisa ditelusuri.

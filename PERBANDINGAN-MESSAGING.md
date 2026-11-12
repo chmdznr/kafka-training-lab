@@ -25,7 +25,7 @@ selesai. Cocok untuk membagi pekerjaan ke banyak worker.
 yang hanya bisa ditambah di ujung (append-only). Record tidak hilang saat
 dibaca. Setiap consumer group menyimpan posisinya sendiri (offset), jadi banyak
 pembaca bisa membaca data yang sama dengan kecepatan masing-masing, dan bisa
-mundur untuk replay selama data masih dalam masa retensi.
+mundur untuk replay selama data masih dalam periode retention.
 
 **Pub/sub sesaat.** Pesan diteruskan ke subscriber yang sedang terhubung saat
 itu, lalu dilupakan. Tidak ada penyimpanan, tidak ada ack. Subscriber yang
@@ -82,7 +82,7 @@ Tipe queue:
   dan dukungan prioritas. Sejak 4.3, hitungan pengiriman hanya naik untuk
   kegagalan sungguhan (`reject`, koneksi putus), bukan untuk `nack` biasa.
 - **Stream.** Log append-only yang direplikasi. Pesan tidak dihapus saat
-  dibaca; consumer memilih posisi mulai lewat offset. Retensi diatur dengan
+  dibaca; consumer memilih posisi mulai lewat offset. Retention diatur dengan
   `max-age` atau `max-length-bytes`. **Super stream** membagi satu stream logis
   ke beberapa partisi, mirip partisi Kafka, dan dipadukan dengan single active
   consumer agar urutan per partisi terjaga.
@@ -95,7 +95,7 @@ Sejak 4.0, AMQP 1.0 menjadi protokol inti yang selalu aktif, di samping AMQP
 Data disimpan di **topic** yang dibagi ke **partisi**. Setiap partisi adalah
 log berurutan yang direplikasi (lihat Lab 01). Consumer bergabung dalam
 **consumer group**: setiap partisi dipegang oleh tepat satu consumer di group
-itu, dan posisi baca disimpan sebagai offset (Lab 04). Sejak 4.0 Kafka hanya
+itu, dan position consumer disimpan sebagai offset (Lab 04). Sejak 4.0 Kafka hanya
 berjalan dalam mode KRaft; ZooKeeper sudah dihapus.
 
 **Share group** (KIP-932, "Queues for Kafka") adalah jenis group baru. Beberapa
@@ -150,11 +150,11 @@ belum tentu ada di Valkey, jadi cek dulu kalau kalian memakainya.
 |---|---|---|---|
 | Model dan routing | Antrean kerja dengan routing kaya di broker (exchange, binding, pola topic, header). Stream untuk model log. | Log berpartisi. Routing sederhana: producer memilih topic, key menentukan partisi. Penyaringan dilakukan consumer. | List dan Streams per key; Pub/Sub per channel atau pola. Tidak ada routing di broker selain nama key/channel. |
 | Urutan pesan | FIFO per queue. Dengan banyak consumer, prefetch, atau requeue, urutan proses tidak terjamin. Single active consumer menjaga urutan dengan mengorbankan paralelisme. | Terjamin per partisi. Pesan dengan key sama masuk partisi sama (Lab 02). Tidak ada urutan global antarpartisi. Share group tidak menjaga urutan. | List dan Streams berurutan per key. Dengan banyak consumer di satu group, urutan proses tidak terjamin. |
-| Retensi dan replay | Queue: pesan hilang setelah di-ack, tidak ada replay. Stream: retensi berbasis umur atau ukuran, bisa dibaca ulang dari offset. | Retensi berbasis waktu atau ukuran (default 7 hari), atau compaction per key. Replay dengan reset offset (Lab 04, Lab 06). | List: tidak ada replay. Pub/Sub: tidak ada penyimpanan. Streams: bisa dibaca ulang dengan `XRANGE` atau mengatur ulang ID group, tapi panjangnya dibatasi memori. |
+| Retention dan replay | Queue: pesan hilang setelah di-ack, tidak ada replay. Stream: retention berbasis umur atau ukuran, bisa dibaca ulang dari offset. | Retention berbasis waktu atau ukuran (default 7 hari), atau compaction per key. Replay dengan reset offset (Lab 04, Lab 06). | List: tidak ada replay. Pub/Sub: tidak ada penyimpanan. Streams: bisa dibaca ulang dengan `XRANGE` atau mengatur ulang ID group, tapi panjangnya dibatasi memori. |
 | Jaminan dan durabilitas saat node mati | Quorum queue dan stream direplikasi; dengan publisher confirm, pesan aman selama mayoritas replika hidup. Classic queue tidak direplikasi: kalau node-nya mati, queue tidak tersedia sampai node kembali. | Replikasi per partisi. Dengan `acks=all` dan `min.insync.replicas=2`, tulisan yang sudah di-ack bertahan walau satu broker mati (Lab 01). At-least-once secara default; idempotent producer dan transaksi untuk kasus tertentu. | Data di memori, persistensi lewat RDB atau AOF sesuai konfigurasi. Replikasi asinkron: saat failover, tulisan yang sudah dikonfirmasi ke klien bisa hilang. Pub/Sub at-most-once. |
 | Skala consumer | Tambah consumer di queue yang sama; batasnya kapasitas satu queue di satu leader. Untuk skala lebih, pecah ke beberapa queue atau super stream. | Consumer aktif per group maksimal sejumlah partisi. Share group melepas batas ini untuk pola antrean. | Streams: tambah consumer di group. Satu stream ada di satu shard Redis Cluster, jadi skala horizontal berarti memecah ke beberapa key. |
 | Retry dan DLQ bawaan | Ada: dead-letter exchange, `delivery-limit` di quorum queue, TTL. Dokumentasi quorum queue terbaru juga memuat delayed retry; cek versi minimalnya sebelum dipakai. | Consumer group: tidak ada; retry topic dan DLT dibuat di aplikasi (Lab 06). Share group: hitungan percobaan dan DLQ bawaan (4.4, `share.version=2`). | List, Pub/Sub, Streams: tidak ada; Streams hanya memberi hitungan pengiriman di pending list. BullMQ menyediakan retry dan penyimpanan job gagal. |
-| Beban operasional | Satu sistem dengan UI manajemen bawaan. Quorum queue butuh minimal 3 node. Perlu memantau panjang queue, alarm memori dan disk. | Lebih banyak yang harus direncanakan: jumlah partisi, retensi dan kapasitas disk, rebalance, dan sering ditambah Schema Registry serta Connect. KRaft menghapus kebutuhan ZooKeeper. | Paling ringan kalau Redis sudah ada. Begitu dipakai sebagai antrean, persistensi, `maxmemory-policy noeviction`, dan HA (Sentinel atau Cluster) wajib diatur, dan sering bentrok dengan kebutuhan cache. |
+| Beban operasional | Satu sistem dengan UI manajemen bawaan. Quorum queue butuh minimal 3 node. Perlu memantau panjang queue, alarm memori dan disk. | Lebih banyak yang harus direncanakan: jumlah partisi, retention dan kapasitas disk, rebalance, dan sering ditambah Schema Registry serta Connect. KRaft menghapus kebutuhan ZooKeeper. | Paling ringan kalau Redis sudah ada. Begitu dipakai sebagai antrean, persistensi, `maxmemory-policy noeviction`, dan HA (Sentinel atau Cluster) wajib diatur, dan sering bentrok dengan kebutuhan cache. |
 | Klien Node.js / NestJS | `amqplib`, `rabbitmq-client`; `rabbitmq-stream-js-client` untuk stream. NestJS punya transport RabbitMQ bawaan. | `@confluentinc/kafka-javascript` (berbasis librdkafka, API kompatibel KafkaJS) dipakai di lab. Transport Kafka NestJS berjalan di atas `kafkajs`, yang rilis terakhirnya 2.2.4 (Februari 2023). | `ioredis`, `redis` (node-redis), BullMQ + `@nestjs/bullmq`. Transport Redis bawaan NestJS memakai Pub/Sub, jadi at-most-once. |
 | Lisensi server | MPL 2.0 | Apache 2.0 | Redis 8: RSALv2 / SSPLv1 / AGPLv3 (pilih satu). Valkey: BSD-3. |
 
@@ -199,7 +199,7 @@ belum tentu ada di Valkey, jadi cek dulu kalau kalian memakainya.
   sama sekali saat failover.
 - List tanpa ack kehilangan pesan kalau worker mati setelah pop. Pub/Sub
   kehilangan pesan kalau subscriber sedang terputus.
-- Streams tidak punya DLQ, retry tertunda, atau retensi berbasis waktu bawaan;
+- Streams tidak punya DLQ, retry tertunda, atau retention berbasis waktu bawaan;
   semua itu ditulis sendiri atau diserahkan ke pustaka.
 - Lisensi Redis berubah dua kali dalam dua tahun. Untuk instansi yang punya
   kebijakan lisensi, ini perlu dicek, atau pertimbangkan Valkey.
@@ -214,7 +214,7 @@ daripada teknologi yang secara teori lebih cocok.
 |---|---|---|
 | Job background di satu aplikasi (kirim email, buat PDF, resize gambar) | BullMQ di Redis, atau RabbitMQ quorum queue | Butuh retry, delay, dan worker paralel; replay jarang dibutuhkan. BullMQ cukup kalau Redis sudah ada dan job boleh diulang. RabbitMQ lebih tepat kalau job harus bertahan saat node mati. |
 | Notifikasi ke pengguna (email, SMS, push) dari beberapa sumber | RabbitMQ dengan exchange `topic` atau `fanout` | Satu event perlu dirutekan ke beberapa kanal dengan aturan berbeda; routing di broker membuat ini mudah. Kafka juga bisa, dengan satu consumer group per kanal. |
-| Integrasi antar-service yang butuh replay dan audit | Kafka | Event disimpan selama retensi, banyak service membaca dengan offset sendiri, service baru bisa membaca dari awal. Ini skenario lab training ini. RabbitMQ stream adalah alternatif kalau tim sudah memakai RabbitMQ dan volumenya sedang. |
+| Integrasi antar-service yang butuh replay dan audit | Kafka | Event disimpan selama periode retention, banyak service membaca dengan offset sendiri, service baru bisa membaca dari awal. Ini skenario lab training ini. RabbitMQ stream adalah alternatif kalau tim sudah memakai RabbitMQ dan volumenya sedang. |
 | CDC dari database | Kafka + Debezium | Ekosistem konektor Debezium dan Kafka Connect paling matang di sini (lihat demo `demo/debezium`). Debezium Server juga bisa mengirim ke tujuan lain, termasuk Redis dan beberapa layanan cloud, untuk kasus yang lebih kecil. |
 | Invalidasi cache di banyak instance aplikasi | Redis Pub/Sub | Pesan kecil, harus cepat, dan kehilangan sesekali bisa diterima karena cache tetap punya TTL. Kalau tidak boleh terlewat, pakai Redis Streams atau topic Kafka yang dibaca setiap instance. |
 | Request-reply antar-service | HTTP atau gRPC dulu; RabbitMQ kalau memang perlu lewat broker | Messaging asinkron menambah kompleksitas untuk pola yang pada dasarnya sinkron. RabbitMQ punya dukungan reply-to yang mapan; Kafka kurang cocok untuk pola ini. |
@@ -288,7 +288,7 @@ RabbitMQ dan Kafka:
   software, appliance, dan layanan cloud (Solace Cloud). Dokumen lama masih
   memakai nama PubSub+.
 - **Topic hierarkis.** Topic berbentuk string bertingkat seperti
-  `order/created/v1/jakarta`, dan subscriber berlangganan dengan wildcard: `*`
+  `order/created/v1/jakarta`, dan subscriber subscribe dengan wildcard: `*`
   untuk satu tingkat dan `>` untuk satu tingkat atau lebih di ujung. Topic
   dipakai langsung sebagai informasi routing; tidak perlu membuat topic lebih
   dulu seperti di Kafka.
